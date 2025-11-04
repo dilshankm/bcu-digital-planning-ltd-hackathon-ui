@@ -1,0 +1,96 @@
+@use 'sass:color';
+@import 'govuk-frontend/dist/govuk/index';
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background-color: #f3f2f1;
+}
+
+#root {
+  display: flex;
+  min-height: 100vh;
+}
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.app-shell__main {
+  flex: 1;
+}
+
+.app-shell__footer {
+  margin-top: auto;
+  padding-block: 2rem 0;
+  border-top: 1px solid color.adjust(#b1b4b6, $lightness: -10%);
+  background-color: #f3f2f1;
+}
+
+.govuk-width-container {
+  width: min(960px, 100%);
+}
+
+.ask-form__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+}
+
+.ask-form__status {
+  margin: 0;
+}
+
+.ask-answer {
+  margin-top: 2rem;
+}
+
+.ask-answer__content {
+  background: #ffffff;
+  border: 1px solid #b1b4b6;
+  border-radius: 4px;
+  padding: 1.5rem;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.loading-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 600;
+}
+
+.loading-indicator__spinner {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 3px solid #0b0c0c;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: loading-indicator-spin 0.8s linear infinite;
+}
+
+@keyframes loading-indicator-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
