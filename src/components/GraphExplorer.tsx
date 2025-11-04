@@ -1,7 +1,6 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import {
-  fetchNodeDetail,
   fetchNodes,
   fetchRelationships,
   fetchSchema,
@@ -12,25 +11,65 @@ import { normaliseGraphData } from '@/utils/graphNormaliser'
 
 type ExplorerTab = 'nodes' | 'relationships' | 'schema'
 
-const stringify = (value: unknown) => JSON.stringify(value, null, 2) ?? ''
 const hasValue = (value: unknown): boolean => value !== undefined && value !== null
 
 export const GraphExplorer = () => {
   const [activeTab, setActiveTab] = useState<ExplorerTab>('nodes')
-  const [nodeLabel, setNodeLabel] = useState('Patient')
-  const [nodeLimit, setNodeLimit] = useState(10)
+  const [nodeLabel, setNodeLabel] = useState('')
   const [nodeResults, setNodeResults] = useState<unknown>(null)
-  const [selectedNodeId, setSelectedNodeId] = useState('')
-  const [nodeDetail, setNodeDetail] = useState<unknown>(null)
   const [relationshipType, setRelationshipType] = useState('')
   const [relationshipResults, setRelationshipResults] = useState<unknown>(null)
   const [schema, setSchema] = useState<unknown>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Clear results when switching tabs
+  const handleTabChange = (tab: ExplorerTab) => {
+    setActiveTab(tab)
+    setError(null)
+    // Optionally clear results from other tabs
+    if (tab === 'nodes') {
+      setRelationshipResults(null)
+    } else if (tab === 'relationships') {
+      setNodeResults(null)
+    }
+  }
+
+  // Extract schema options
+  const schemaNodeTypes = useMemo(() => {
+    if (!schema || typeof schema !== 'object') return []
+    const nodeTypes = (schema as Record<string, unknown>).node_types || (schema as Record<string, unknown>).nodeLabels
+    return Array.isArray(nodeTypes) ? nodeTypes.filter((t): t is string => typeof t === 'string') : []
+  }, [schema])
+
+  const schemaRelationshipTypes = useMemo(() => {
+    if (!schema || typeof schema !== 'object') return []
+    const relTypes = (schema as Record<string, unknown>).relationship_types || (schema as Record<string, unknown>).relationshipTypes
+    return Array.isArray(relTypes) ? relTypes.filter((t): t is string => typeof t === 'string') : []
+  }, [schema])
+
+  // Auto-fetch schema on mount
+  useEffect(() => {
+    const loadSchema = async () => {
+      try {
+        const result = await fetchSchema()
+        setSchema(result)
+      } catch (err) {
+        // Schema loading is optional, don't show error
+        console.warn('Failed to load schema:', err)
+      }
+    }
+    void loadSchema()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const nodeGraph = useMemo(() => normaliseGraphData(nodeResults), [nodeResults])
-  const nodeDetailGraph = useMemo(() => normaliseGraphData(nodeDetail), [nodeDetail])
-  const relationshipGraph = useMemo(() => normaliseGraphData(relationshipResults), [relationshipResults])
+  const relationshipGraph = useMemo(() => {
+    const normalized = normaliseGraphData(relationshipResults)
+    console.log('Normalized relationship graph:', normalized)
+    console.log('Nodes:', normalized.nodes.length, 'Links:', normalized.links.length)
+    return normalized
+  }, [relationshipResults])
 
   const runSafely = useCallback(async (action: () => Promise<void>) => {
     setIsLoading(true)
@@ -47,26 +86,15 @@ export const GraphExplorer = () => {
 
   const handleFetchNodes = useCallback(() => {
     void runSafely(async () => {
-      const results = await fetchNodes({ label: nodeLabel || undefined, limit: nodeLimit })
+      const results = await fetchNodes({ label: nodeLabel || undefined })
       setNodeResults(results)
     })
-  }, [nodeLabel, nodeLimit, runSafely])
-
-  const handleFetchNodeDetail = useCallback(() => {
-    if (!selectedNodeId) {
-      setError('Enter a node identifier to explore its neighbours.')
-      return
-    }
-
-    void runSafely(async () => {
-      const detail = await fetchNodeDetail(selectedNodeId)
-      setNodeDetail(detail)
-    })
-  }, [runSafely, selectedNodeId])
+  }, [nodeLabel, runSafely])
 
   const handleFetchRelationships = useCallback(() => {
     void runSafely(async () => {
       const results = await fetchRelationships({ type: relationshipType || undefined })
+      console.log('Relationship API response:', results)
       setRelationshipResults(results)
     })
   }, [relationshipType, runSafely])
@@ -91,7 +119,7 @@ export const GraphExplorer = () => {
               type="button"
               role="tab"
               aria-selected={activeTab === 'nodes'}
-              onClick={() => setActiveTab('nodes')}
+              onClick={() => handleTabChange('nodes')}
             >
               Nodes
             </button>
@@ -104,7 +132,7 @@ export const GraphExplorer = () => {
               type="button"
               role="tab"
               aria-selected={activeTab === 'relationships'}
-              onClick={() => setActiveTab('relationships')}
+              onClick={() => handleTabChange('relationships')}
             >
               Relationships
             </button>
@@ -115,7 +143,7 @@ export const GraphExplorer = () => {
               type="button"
               role="tab"
               aria-selected={activeTab === 'schema'}
-              onClick={() => setActiveTab('schema')}
+              onClick={() => handleTabChange('schema')}
             >
               Schema
             </button>
@@ -124,160 +152,178 @@ export const GraphExplorer = () => {
 
         <div className="govuk-tabs__panel" hidden={activeTab !== 'nodes'} role="tabpanel">
           <form
-            className="govuk-form-group govuk-!-margin-bottom-2"
             onSubmit={(event) => {
               event.preventDefault()
               handleFetchNodes()
             }}
           >
-            <label className="govuk-label" htmlFor="node-label">
-              Node label (optional)
-            </label>
-            <input
-              className="govuk-input govuk-!-width-one-half"
-              id="node-label"
-              name="node-label"
-              value={nodeLabel}
-              onChange={(event) => setNodeLabel(event.target.value)}
-              placeholder="Patient"
-            />
-            <label className="govuk-label govuk-!-margin-top-3" htmlFor="node-limit">
-              Limit
-            </label>
-            <input
-              className="govuk-input govuk-!-width-one-quarter"
-              id="node-limit"
-              name="node-limit"
-              type="number"
-              min={1}
-              max={200}
-              value={nodeLimit}
-              onChange={(event) => {
-                const value = Number(event.target.value)
-                setNodeLimit(Number.isNaN(value) ? 10 : value)
-              }}
-            />
-            <button className="govuk-button govuk-!-margin-top-3" type="submit" disabled={isLoading}>
-              Fetch nodes
-            </button>
+            <div className="graph-explorer__form-row">
+              <div className="graph-explorer__form-field">
+                <label className="govuk-label" htmlFor="node-label">
+                  Node type
+                </label>
+                {schemaNodeTypes.length > 0 ? (
+                  <select
+                    className="govuk-select"
+                    id="node-label"
+                    name="node-label"
+                    value={nodeLabel}
+                    onChange={(event) => {
+                      setNodeLabel(event.target.value)
+                      setNodeResults(null) // Clear results when filter changes
+                    }}
+                  >
+                    <option value="">All types</option>
+                    {schemaNodeTypes.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    className="govuk-input"
+                    id="node-label"
+                    name="node-label"
+                    value={nodeLabel}
+                    onChange={(event) => {
+                      setNodeLabel(event.target.value)
+                      setNodeResults(null) // Clear results when filter changes
+                    }}
+                    placeholder="e.g. Patient"
+                  />
+                )}
+              </div>
+            </div>
+            <div className="graph-explorer__form-actions">
+              <button className="govuk-button" type="submit" disabled={isLoading}>
+                Fetch nodes
+              </button>
+              {hasValue(nodeResults) && (
+                <button
+                  className="govuk-button govuk-button--secondary"
+                  type="button"
+                  onClick={() => setNodeResults(null)}
+                  disabled={isLoading}
+                >
+                  Clear results
+                </button>
+              )}
+            </div>
           </form>
           {nodeGraph.nodes.length > 0 && (
             <div className="graph-explorer__visual govuk-!-margin-top-4">
-              <GraphCanvas data={nodeGraph} caption="Sample nodes" />
+              <p className="graph-canvas__caption govuk-body-s">
+                Showing {nodeGraph.nodes.length} node{nodeGraph.nodes.length === 1 ? '' : 's'}
+                {nodeLabel ? ` of type "${nodeLabel}"` : ''}
+              </p>
+              <GraphCanvas data={nodeGraph} />
             </div>
           )}
-          {hasValue(nodeResults) && (
-            <details className="govuk-details govuk-!-margin-top-3">
-              <summary className="govuk-details__summary">
-                <span className="govuk-details__summary-text">Raw response (nodes)</span>
-              </summary>
-              <div className="govuk-details__text">
-                <pre className="graph-explorer__code">{stringify(nodeResults)}</pre>
-              </div>
-            </details>
-          )}
-
-          <div className="govuk-form-group govuk-!-margin-top-6">
-            <label className="govuk-label" htmlFor="node-id">
-              Inspect a specific node by ID
-            </label>
-            <input
-              className="govuk-input"
-              id="node-id"
-              name="node-id"
-              value={selectedNodeId}
-              onChange={(event) => setSelectedNodeId(event.target.value)}
-              placeholder="patient-123"
-            />
-            <button
-              className="govuk-button govuk-button--secondary govuk-!-margin-top-3"
-              type="button"
-              disabled={isLoading}
-              onClick={handleFetchNodeDetail}
-            >
-              Fetch node detail
-            </button>
-            {nodeDetailGraph.nodes.length > 0 && (
-              <div className="graph-explorer__visual govuk-!-margin-top-4">
-                <GraphCanvas data={nodeDetailGraph} caption="Neighbourhood" />
-              </div>
-            )}
-            {hasValue(nodeDetail) && (
-              <details className="govuk-details govuk-!-margin-top-3">
-                <summary className="govuk-details__summary">
-                  <span className="govuk-details__summary-text">Raw response (node detail)</span>
-                </summary>
-                <div className="govuk-details__text">
-                  <pre className="graph-explorer__code">{stringify(nodeDetail)}</pre>
-                </div>
-              </details>
-            )}
-          </div>
         </div>
 
         <div className="govuk-tabs__panel" hidden={activeTab !== 'relationships'} role="tabpanel">
           <form
-            className="govuk-form-group"
             onSubmit={(event) => {
               event.preventDefault()
               handleFetchRelationships()
             }}
           >
-            <label className="govuk-label" htmlFor="relationship-type">
-              Relationship type (optional)
-            </label>
-            <input
-              className="govuk-input govuk-!-width-two-thirds"
-              id="relationship-type"
-              name="relationship-type"
-              value={relationshipType}
-              onChange={(event) => setRelationshipType(event.target.value)}
-              placeholder="HAS_CONDITION"
-            />
-            <button className="govuk-button govuk-!-margin-top-3" type="submit" disabled={isLoading}>
-              Fetch relationships
-            </button>
-          </form>
-          {relationshipGraph.links.length > 0 && (
-            <div className="graph-explorer__visual govuk-!-margin-top-4">
-              <GraphCanvas data={relationshipGraph} caption="Relationship preview" />
-            </div>
-          )}
-          {hasValue(relationshipResults) && (
-            <details className="govuk-details govuk-!-margin-top-3">
-              <summary className="govuk-details__summary">
-                <span className="govuk-details__summary-text">Raw response (relationships)</span>
-              </summary>
-              <div className="govuk-details__text">
-                <pre className="graph-explorer__code">{stringify(relationshipResults)}</pre>
+            <div className="graph-explorer__form-row">
+              <div className="graph-explorer__form-field">
+                <label className="govuk-label" htmlFor="relationship-type">
+                  Relationship type
+                </label>
+                {schemaRelationshipTypes.length > 0 ? (
+                  <select
+                    className="govuk-select"
+                    id="relationship-type"
+                    name="relationship-type"
+                    value={relationshipType}
+                    onChange={(event) => {
+                      setRelationshipType(event.target.value)
+                      setRelationshipResults(null) // Clear results when filter changes
+                    }}
+                  >
+                    <option value="">All types</option>
+                    {schemaRelationshipTypes.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    className="govuk-input"
+                    id="relationship-type"
+                    name="relationship-type"
+                    value={relationshipType}
+                    onChange={(event) => {
+                      setRelationshipType(event.target.value)
+                      setRelationshipResults(null) // Clear results when filter changes
+                    }}
+                    placeholder="e.g. HAS_CONDITION"
+                  />
+                )}
               </div>
-            </details>
-          )}
+            </div>
+            <div className="graph-explorer__form-actions">
+              <button className="govuk-button" type="submit" disabled={isLoading}>
+                Fetch relationships
+              </button>
+              {hasValue(relationshipResults) && (
+                <button
+                  className="govuk-button govuk-button--secondary"
+                  type="button"
+                  onClick={() => setRelationshipResults(null)}
+                  disabled={isLoading}
+                >
+                  Clear results
+                </button>
+              )}
+            </div>
+          </form>
+          {relationshipGraph.links.length > 0 ? (
+            <div className="graph-explorer__visual govuk-!-margin-top-4">
+              <p className="graph-canvas__caption govuk-body-s">
+                Showing {relationshipGraph.links.length} relationship{relationshipGraph.links.length === 1 ? '' : 's'}
+                {relationshipType ? ` of type "${relationshipType}"` : ''} ({relationshipGraph.nodes.length} node{relationshipGraph.nodes.length === 1 ? '' : 's'})
+              </p>
+              <GraphCanvas data={relationshipGraph} />
+            </div>
+          ) : hasValue(relationshipResults) ? (
+            <div className="govuk-inset-text govuk-!-margin-top-4">
+              <p className="govuk-body">
+                The API returned data, but it couldn't be visualized as a graph. 
+                Relationships need source and target nodes to display properly.
+              </p>
+              <p className="govuk-body-s">
+                Check the browser console for the raw API response.
+              </p>
+            </div>
+          ) : null}
         </div>
 
         <div className="govuk-tabs__panel" hidden={activeTab !== 'schema'} role="tabpanel">
-          <button
-            className="govuk-button"
-            type="button"
-            disabled={isLoading}
-            onClick={handleFetchSchema}
-          >
-            Fetch schema snapshot
-          </button>
+          <div className="graph-explorer__form-actions">
+            <button
+              className="govuk-button"
+              type="button"
+              disabled={isLoading}
+              onClick={handleFetchSchema}
+            >
+              Refresh schema
+            </button>
+          </div>
           {hasValue(schema) && (
-            <>
-              <div className="graph-explorer__visual govuk-!-margin-top-4">
-                <SchemaSummary value={schema} />
-              </div>
-              <details className="govuk-details govuk-!-margin-top-3">
-                <summary className="govuk-details__summary">
-                  <span className="govuk-details__summary-text">Raw response (schema)</span>
-                </summary>
-                <div className="govuk-details__text">
-                  <pre className="graph-explorer__code">{stringify(schema)}</pre>
-                </div>
-              </details>
-            </>
+            <div className="graph-explorer__visual govuk-!-margin-top-4">
+              <SchemaSummary value={schema} />
+            </div>
+          )}
+          {!hasValue(schema) && !isLoading && (
+            <p className="govuk-body govuk-!-margin-top-3">
+              Schema will load automatically. Use the button above to refresh.
+            </p>
           )}
         </div>
       </div>

@@ -1,12 +1,12 @@
 import type { AskQuestionResponse } from '@/types/ask'
-
+import CypherQueryDisplay from './CypherQueryDisplay'
+import TraversalPathsDisplay from './TraversalPathsDisplay'
+import ExplainabilityPanel from './ExplainabilityPanel'
 import RefinementTimeline from './RefinementTimeline'
 
 interface AnswerPanelProps {
   response: AskQuestionResponse
 }
-
-const serialise = (value: unknown) => JSON.stringify(value, null, 2) ?? ''
 
 const renderSources = (sources?: unknown) => {
   if (!Array.isArray(sources) || sources.length === 0) {
@@ -32,51 +32,32 @@ const renderSources = (sources?: unknown) => {
 }
 
 export const AnswerPanel = ({ response }: AnswerPanelProps) => {
-  const hasData = response.data !== undefined && response.data !== null
-  const hasMetadata = response.metadata !== undefined && response.metadata !== null
-  const additionalEntries = Object.entries(response).filter(
-    ([key]) => !['answer', 'sources', 'refinements', 'data', 'metadata'].includes(key),
-  )
-
-  const showDetail = hasData || hasMetadata || additionalEntries.length > 0
-
   return (
     <section className="ask-answer" aria-live="polite">
       <h2 className="govuk-heading-m">Answer</h2>
-      <div className="ask-answer__content">
-        {response.answer}
-      </div>
+      <div className="ask-answer__content">{response.answer}</div>
       {renderSources(response.sources)}
-      {Array.isArray(response.refinements) && response.refinements.length > 0 && (
-        <RefinementTimeline steps={response.refinements} />
+
+      {/* Cypher Query Display */}
+      {response.cypher_query && <CypherQueryDisplay query={response.cypher_query} />}
+
+      {/* Traversal Paths & Graph Dependencies */}
+      {response.traversal_paths && response.traversal_paths.length > 0 && (
+        <TraversalPathsDisplay paths={response.traversal_paths} nodesUsed={response.nodes_used} />
       )}
 
-      {showDetail && (
-        <details className="govuk-details govuk-!-margin-top-4" open>
-          <summary className="govuk-details__summary">
-            <span className="govuk-details__summary-text">More detail</span>
-          </summary>
-          <div className="govuk-details__text ask-answer__details">
-            {hasData && (
-              <div className="ask-answer__details-block">
-                <h4 className="govuk-heading-s">Structured data</h4>
-                <pre className="ask-answer__code-block">{serialise(response.data)}</pre>
-              </div>
-            )}
-            {hasMetadata && (
-              <div className="ask-answer__details-block">
-                <h4 className="govuk-heading-s">Metadata</h4>
-                <pre className="ask-answer__code-block">{serialise(response.metadata)}</pre>
-              </div>
-            )}
-            {additionalEntries.map(([key, value]) => (
-              <div className="ask-answer__details-block" key={key}>
-                <h4 className="govuk-heading-s">{key}</h4>
-                <pre className="ask-answer__code-block">{serialise(value)}</pre>
-              </div>
-            ))}
-          </div>
-        </details>
+      {/* Explainability Panel */}
+      <ExplainabilityPanel
+        stepsTaken={response.steps_taken}
+        confidence={response.confidence}
+        plan={response.plan}
+        nodesUsed={response.nodes_used}
+        similarNodesFound={response.similar_nodes_found}
+      />
+
+      {/* Refinements Timeline */}
+      {Array.isArray(response.refinements) && response.refinements.length > 0 && (
+        <RefinementTimeline steps={response.refinements} />
       )}
     </section>
   )

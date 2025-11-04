@@ -32,6 +32,8 @@ declare module 'react-force-graph-2d' {
     linkLabel?: (link: LinkType) => string
     nodeLabel?: (node: NodeType) => string
     nodeCanvasObject?: (node: NodeType, ctx: CanvasRenderingContext2D, globalScale: number) => void
+    onNodeHover?: (node: NodeType | null) => void
+    onNodeClick?: (node: NodeType | null) => void
     cooldownTicks?: number
     onEngineStop?: () => void
   }

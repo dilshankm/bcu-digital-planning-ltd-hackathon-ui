@@ -20,7 +20,7 @@ export const PageLayout = ({ title, description, children }: PageLayoutProps) =>
           </a>
         </div>
         <div className="govuk-header__content">
-          <span className="govuk-header__service-name">Innovation Assistant</span>
+          <span className="govuk-header__service-name">Healthcare GraphRAG</span>
         </div>
       </div>
     </header>
@@ -31,7 +31,7 @@ export const PageLayout = ({ title, description, children }: PageLayoutProps) =>
           <div className="govuk-grid-row">
             <div className="govuk-grid-column-two-thirds">
               <span className="govuk-caption-l">
-                West Midlands Health Tech Innovation Accelerator
+                BCU Hackathon Challenge - Synthea Healthcare Dataset
               </span>
               <h1 className="govuk-heading-l govuk-!-margin-bottom-3">{title}</h1>
               {description && (
@@ -50,7 +50,7 @@ export const PageLayout = ({ title, description, children }: PageLayoutProps) =>
           <div className="govuk-footer__meta-item govuk-footer__meta-item--grow">
             <h2 className="govuk-visually-hidden">Support links</h2>
             <span className="govuk-footer__licence-description">
-              Built for the West Midlands Health Tech Innovation Accelerator pilot.
+              GraphRAG Healthcare Challenge using synthetic Synthea patient data with Neo4j graph database and LLM reasoning.
             </span>
           </div>
           <div className="govuk-footer__meta-item">

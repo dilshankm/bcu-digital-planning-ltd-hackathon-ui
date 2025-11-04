@@ -21,7 +21,7 @@ const App = () => {
   const [activePanel, setActivePanel] = useState<ActivePanel>('ask')
   const [askNotice, setAskNotice] = useState<string | null>(null)
 
-  const { state, ask, isLoading } = useAskQuestion({
+  const { state, ask, reset: resetAskState, isLoading } = useAskQuestion({
     onSuccess: async () => {
       await refreshHistory()
       setAskNotice(null)
@@ -57,16 +57,16 @@ const App = () => {
   const description = useMemo(
     () => (
       <>
-        Ask the WMHTIA discovery knowledge base a single question. We return an
-        evidence-backed answer along with any available sources to support rapid
-        decision-making across the accelerator network.
+        Ask questions about synthetic healthcare patient data using GraphRAG technology.
+        This intelligent system combines graph databases with LLM reasoning to answer complex
+        healthcare questions about patients, conditions, procedures, and clinical observations.
       </>
     ),
     [],
   )
 
   return (
-    <PageLayout title="Innovation insight" description={description}>
+    <PageLayout title="Healthcare GraphRAG Assistant" description={description}>
       <nav className="app-navigation" aria-label="Primary">
         <ul className="app-navigation__list">
           <li className="app-navigation__item">
@@ -139,13 +139,13 @@ const App = () => {
       {activePanel === 'ask' && (
         <div>
           <SessionControls
-            sessionId={sessionId}
             isLoading={sessionLoading}
-            onRefresh={refreshHistory}
             onNewSession={async () => {
               const id = await startNewSession()
               if (id) {
                 setQuestion('')
+                resetAskState() // Clear the answer and results
+                setValidationError(null)
                 setAskNotice('Started a new session. Ask your next question to build context.')
               }
               return id

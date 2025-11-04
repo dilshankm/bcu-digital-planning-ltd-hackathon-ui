@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 
 import { createSession, fetchSessionHistory } from '@/services/sessionService'
 import type { ConversationSession } from '@/types/session'
@@ -16,11 +16,18 @@ export const useSession = () => {
     history: [],
     isLoading: false,
   })
+  
+  // Use a ref to always have access to the current sessionId
+  const sessionIdRef = useRef<string | null>(null)
 
   const loadHistory = useCallback(async (sessionId: string) => {
     setState((current) => ({ ...current, isLoading: true, error: undefined }))
     try {
+      console.log('Fetching history for session:', sessionId)
       const result = await fetchSessionHistory(sessionId)
+      console.log('Fetched history result:', result)
+      console.log('Messages count:', result.messages?.length || 0)
+      sessionIdRef.current = sessionId
       setState((current) => ({
         ...current,
         sessionId,
@@ -29,6 +36,7 @@ export const useSession = () => {
         error: undefined,
       }))
     } catch (error) {
+      console.error('Error loading history:', error)
       const message = error instanceof Error ? error.message : 'Unable to load session history'
       setState((current) => ({
         ...current,
@@ -59,12 +67,18 @@ export const useSession = () => {
   }, [loadHistory])
 
   const refreshHistory = useCallback(async () => {
-    if (!state.sessionId) {
+    // Use the ref to get the current sessionId
+    const currentSessionId = sessionIdRef.current
+    console.log('refreshHistory called, sessionId:', currentSessionId)
+    if (!currentSessionId) {
+      console.log('No session ID available, skipping refresh')
       return
     }
 
-    await loadHistory(state.sessionId)
-  }, [loadHistory, state.sessionId])
+    console.log('Loading history for session:', currentSessionId)
+    await loadHistory(currentSessionId)
+    console.log('History loaded')
+  }, [loadHistory])
 
   return {
     sessionId: state.sessionId,

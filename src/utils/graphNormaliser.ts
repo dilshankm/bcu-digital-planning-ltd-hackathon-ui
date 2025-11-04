@@ -94,6 +94,7 @@ const extractLabel = (raw: unknown): string | undefined => {
 interface RegisterContext {
   nodes: Map<string, NormalisedGraphNode>
   links: NormalisedGraphLink[]
+  linkKeys: Set<string>
 }
 
 const registerNode = (
@@ -133,19 +134,30 @@ const registerLink = (context: RegisterContext, raw: unknown) => {
     return
   }
 
-  const sourceCandidate =
-    (raw as Record<string, unknown>).source ??
-    (raw as Record<string, unknown>).start ??
-    (raw as Record<string, unknown>).startNode ??
-    (raw as Record<string, unknown>).from ??
-    (raw as Record<string, unknown>).out
+  const rawRecord = raw as Record<string, unknown>
+  
+  let sourceCandidate =
+    rawRecord.source ??
+    rawRecord.start ??
+    rawRecord.startNode ??
+    rawRecord.from ??
+    rawRecord.out
 
-  const targetCandidate =
-    (raw as Record<string, unknown>).target ??
-    (raw as Record<string, unknown>).end ??
-    (raw as Record<string, unknown>).endNode ??
-    (raw as Record<string, unknown>).to ??
-    (raw as Record<string, unknown>).in
+  let targetCandidate =
+    rawRecord.target ??
+    rawRecord.end ??
+    rawRecord.endNode ??
+    rawRecord.to ??
+    rawRecord.in
+
+  // If source/target are primitive values (numbers/strings), convert them to objects
+  if (sourceCandidate !== undefined && (typeof sourceCandidate === 'number' || typeof sourceCandidate === 'string')) {
+    sourceCandidate = { id: sourceCandidate }
+  }
+  
+  if (targetCandidate !== undefined && (typeof targetCandidate === 'number' || typeof targetCandidate === 'string')) {
+    targetCandidate = { id: targetCandidate }
+  }
 
   if (!sourceCandidate || !targetCandidate) {
     return
@@ -154,10 +166,20 @@ const registerLink = (context: RegisterContext, raw: unknown) => {
   const source = registerNode(context, sourceCandidate)
   const target = registerNode(context, targetCandidate)
 
-  const id = extractId(raw) ?? `link-${context.links.length + 1}`
   const label = extractLabel(raw)
+  
+  // Create a unique key to prevent duplicates
+  const linkKey = `${source.id}|${label || 'LINK'}|${target.id}`
+  
+  // Skip if this link already exists
+  if (context.linkKeys.has(linkKey)) {
+    return
+  }
+
+  const id = extractId(raw) ?? `link-${context.links.length + 1}`
   const properties = extractProperties(raw)
 
+  context.linkKeys.add(linkKey)
   context.links.push({
     id,
     source: source.id,
@@ -225,6 +247,7 @@ export const normaliseGraphData = (input: unknown): NormalisedGraph => {
   const context: RegisterContext = {
     nodes: new Map<string, NormalisedGraphNode>(),
     links: [],
+    linkKeys: new Set<string>(),
   }
 
   normaliseValue(context, input)
