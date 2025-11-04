@@ -12,13 +12,15 @@ export const SessionControls = ({
   onNewSession,
 }: SessionControlsProps) => (
   <div className="session-controls govuk-!-margin-bottom-4">
-    <div className="session-controls__details">
-      <span className="govuk-body-s govuk-!-font-weight-bold">Session</span>
-      <span className="govuk-body-s" data-testid="current-session-id">
-        {sessionId ?? 'Not available'}
-      </span>
-      {isLoading && <span className="govuk-tag govuk-tag--blue">Loading</span>}
-    </div>
+    {sessionId && (
+      <div className="session-controls__details">
+        <span className="govuk-body-s govuk-!-font-weight-bold">Session</span>
+        <span className="govuk-body-s" data-testid="current-session-id">
+          {sessionId}
+        </span>
+        {isLoading && <span className="govuk-tag govuk-tag--blue">Loading</span>}
+      </div>
+    )}
     <div className="session-controls__actions">
       <button
         className="govuk-button govuk-button--secondary"
