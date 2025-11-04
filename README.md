@@ -43,5 +43,5 @@ GitHub Actions workflow `Deploy GovAgent to AWS S3` automatically builds and dep
 
 - `AWS_ACCESS_KEY_ID`
 - `AWS_SECRET_ACCESS_KEY`
-- `S3_BUCKET_NAME` (for example, `graph-rag-frontend-223516915321`; no `s3://` prefix or trailing spaces)
+- `S3_BUCKET_NAME` (for example, `graph-rag-frontend-223516915321`; enter only the value—no `s3://` prefix, no `S3_BUCKET_NAME=` key, and no trailing spaces)
 - `CLOUDFRONT_DISTRIBUTION_ID`

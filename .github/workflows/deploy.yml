@@ -41,6 +41,9 @@ jobs:
           S3_BUCKET: ${{ secrets.S3_BUCKET_NAME }}
         run: |
           BUCKET=$(printf "%s" "$S3_BUCKET" | tr -d '\r\n\t ')
+          if printf "%s" "$BUCKET" | grep -q '='; then
+            BUCKET=${BUCKET##*=}
+          fi
           BUCKET=${BUCKET#s3://}
           BUCKET=${BUCKET#/}
 
