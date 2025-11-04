@@ -39,13 +39,19 @@ const App = () => {
       return
     }
 
-    if (!sessionId) {
-      setValidationError('Waiting for conversation session to be ready. Please try again in a moment.')
-      return
+    setValidationError(null)
+    let activeSessionId = sessionId
+
+    if (!activeSessionId) {
+      activeSessionId = await startNewSession()
+
+      if (!activeSessionId) {
+        setAskNotice('Unable to start a conversation session. Please try again or check the API endpoint.')
+        return
+      }
     }
 
-    setValidationError(null)
-    await ask(trimmedQuestion, sessionId)
+    await ask(trimmedQuestion, activeSessionId)
   }
 
   const description = useMemo(

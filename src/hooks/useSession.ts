@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useState } from 'react'
 
 import { createSession, fetchSessionHistory } from '@/services/sessionService'
 import type { ConversationSession } from '@/types/session'
@@ -14,7 +14,7 @@ export const useSession = () => {
   const [state, setState] = useState<UseSessionState>({
     sessionId: null,
     history: [],
-    isLoading: true,
+    isLoading: false,
   })
 
   const loadHistory = useCallback(async (sessionId: string) => {
@@ -65,12 +65,6 @@ export const useSession = () => {
 
     await loadHistory(state.sessionId)
   }, [loadHistory, state.sessionId])
-
-  useEffect(() => {
-    if (!state.sessionId) {
-      void initialiseSession()
-    }
-  }, [initialiseSession, state.sessionId])
 
   return {
     sessionId: state.sessionId,
