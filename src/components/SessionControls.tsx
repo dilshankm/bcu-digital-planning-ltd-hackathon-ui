@@ -13,11 +13,8 @@ export const SessionControls = ({
 }: SessionControlsProps) => (
   <div className="session-controls govuk-!-margin-bottom-4">
     {sessionId && (
-      <div className="session-controls__details">
-        <span className="govuk-body-s govuk-!-font-weight-bold">Session</span>
-        <span className="govuk-body-s" data-testid="current-session-id">
-          {sessionId}
-        </span>
+      <div className="session-controls__details" data-testid="current-session-status">
+        <span className="govuk-body-s govuk-!-font-weight-bold">Conversation active</span>
         {isLoading && <span className="govuk-tag govuk-tag--blue">Loading</span>}
       </div>
     )}

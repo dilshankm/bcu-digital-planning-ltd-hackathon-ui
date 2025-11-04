@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 import {
   fetchNodeDetail,
@@ -6,6 +6,9 @@ import {
   fetchRelationships,
   fetchSchema,
 } from '@/services/exploreService'
+import GraphCanvas from '@/components/GraphCanvas'
+import SchemaSummary from '@/components/SchemaSummary'
+import { normaliseGraphData } from '@/utils/graphNormaliser'
 
 type ExplorerTab = 'nodes' | 'relationships' | 'schema'
 
@@ -24,6 +27,10 @@ export const GraphExplorer = () => {
   const [schema, setSchema] = useState<unknown>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const nodeGraph = useMemo(() => normaliseGraphData(nodeResults), [nodeResults])
+  const nodeDetailGraph = useMemo(() => normaliseGraphData(nodeDetail), [nodeDetail])
+  const relationshipGraph = useMemo(() => normaliseGraphData(relationshipResults), [relationshipResults])
 
   const runSafely = useCallback(async (action: () => Promise<void>) => {
     setIsLoading(true)
@@ -154,10 +161,15 @@ export const GraphExplorer = () => {
               Fetch nodes
             </button>
           </form>
+          {nodeGraph.nodes.length > 0 && (
+            <div className="graph-explorer__visual govuk-!-margin-top-4">
+              <GraphCanvas data={nodeGraph} caption="Sample nodes" />
+            </div>
+          )}
           {hasValue(nodeResults) && (
-            <details className="govuk-details govuk-!-margin-top-3" open>
+            <details className="govuk-details govuk-!-margin-top-3">
               <summary className="govuk-details__summary">
-                <span className="govuk-details__summary-text">Results</span>
+                <span className="govuk-details__summary-text">Raw response (nodes)</span>
               </summary>
               <div className="govuk-details__text">
                 <pre className="graph-explorer__code">{stringify(nodeResults)}</pre>
@@ -185,10 +197,15 @@ export const GraphExplorer = () => {
             >
               Fetch node detail
             </button>
+            {nodeDetailGraph.nodes.length > 0 && (
+              <div className="graph-explorer__visual govuk-!-margin-top-4">
+                <GraphCanvas data={nodeDetailGraph} caption="Neighbourhood" />
+              </div>
+            )}
             {hasValue(nodeDetail) && (
-              <details className="govuk-details govuk-!-margin-top-3" open>
+              <details className="govuk-details govuk-!-margin-top-3">
                 <summary className="govuk-details__summary">
-                  <span className="govuk-details__summary-text">Node detail</span>
+                  <span className="govuk-details__summary-text">Raw response (node detail)</span>
                 </summary>
                 <div className="govuk-details__text">
                   <pre className="graph-explorer__code">{stringify(nodeDetail)}</pre>
@@ -221,10 +238,15 @@ export const GraphExplorer = () => {
               Fetch relationships
             </button>
           </form>
+          {relationshipGraph.links.length > 0 && (
+            <div className="graph-explorer__visual govuk-!-margin-top-4">
+              <GraphCanvas data={relationshipGraph} caption="Relationship preview" />
+            </div>
+          )}
           {hasValue(relationshipResults) && (
-            <details className="govuk-details govuk-!-margin-top-3" open>
+            <details className="govuk-details govuk-!-margin-top-3">
               <summary className="govuk-details__summary">
-                <span className="govuk-details__summary-text">Relationships</span>
+                <span className="govuk-details__summary-text">Raw response (relationships)</span>
               </summary>
               <div className="govuk-details__text">
                 <pre className="graph-explorer__code">{stringify(relationshipResults)}</pre>
@@ -243,14 +265,19 @@ export const GraphExplorer = () => {
             Fetch schema snapshot
           </button>
           {hasValue(schema) && (
-            <details className="govuk-details govuk-!-margin-top-3" open>
-              <summary className="govuk-details__summary">
-                <span className="govuk-details__summary-text">Schema</span>
-              </summary>
-              <div className="govuk-details__text">
-                <pre className="graph-explorer__code">{stringify(schema)}</pre>
+            <>
+              <div className="graph-explorer__visual govuk-!-margin-top-4">
+                <SchemaSummary value={schema} />
               </div>
-            </details>
+              <details className="govuk-details govuk-!-margin-top-3">
+                <summary className="govuk-details__summary">
+                  <span className="govuk-details__summary-text">Raw response (schema)</span>
+                </summary>
+                <div className="govuk-details__text">
+                  <pre className="graph-explorer__code">{stringify(schema)}</pre>
+                </div>
+              </details>
+            </>
           )}
         </div>
       </div>
