@@ -37,15 +37,26 @@ jobs:
           aws-region: us-east-1
 
       - name: Deploy to S3
+        env:
+          S3_BUCKET: ${{ secrets.S3_BUCKET_NAME }}
         run: |
-          BUCKET_NAME="${{ secrets.S3_BUCKET_NAME }}"
-          BUCKET_NAME="${BUCKET_NAME#s3://}"
-          BUCKET_NAME="${BUCKET_NAME#/}"
-          if [ -z "$BUCKET_NAME" ]; then
+          BUCKET=$(printf "%s" "$S3_BUCKET" | tr -d '\r\n\t ')
+          BUCKET=${BUCKET#s3://}
+          BUCKET=${BUCKET#/}
+
+          echo "Using bucket: '$BUCKET'"
+
+          if [ -z "$BUCKET" ]; then
             echo "S3 bucket name is empty" >&2
             exit 1
           fi
-          aws s3 sync dist/ "s3://$BUCKET_NAME" --delete --exclude "*.map"
+
+          if ! printf "%s" "$BUCKET" | grep -Eq '^[a-z0-9.-]{3,63}$'; then
+            echo "S3 bucket name contains invalid characters" >&2
+            exit 1
+          fi
+
+          aws s3 sync dist/ "s3://$BUCKET" --delete --exclude "*.map"
 
       - name: Invalidate CloudFront cache
         if: ${{ env.CLOUDFRONT_DISTRIBUTION_ID != '' }}
