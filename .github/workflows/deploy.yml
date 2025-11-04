@@ -38,7 +38,14 @@ jobs:
 
       - name: Deploy to S3
         run: |
-          aws s3 sync dist/ s3://${{ secrets.S3_BUCKET_NAME }} --delete --exclude "*.map"
+          BUCKET_NAME="${{ secrets.S3_BUCKET_NAME }}"
+          BUCKET_NAME="${BUCKET_NAME#s3://}"
+          BUCKET_NAME="${BUCKET_NAME#/}"
+          if [ -z "$BUCKET_NAME" ]; then
+            echo "S3 bucket name is empty" >&2
+            exit 1
+          fi
+          aws s3 sync dist/ "s3://$BUCKET_NAME" --delete --exclude "*.map"
 
       - name: Invalidate CloudFront cache
         if: ${{ env.CLOUDFRONT_DISTRIBUTION_ID != '' }}
