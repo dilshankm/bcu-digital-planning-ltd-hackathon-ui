@@ -15,6 +15,11 @@ export interface AskQuestionResult {
   error?: string
 }
 
+export interface UseAskQuestionOptions {
+  onSuccess?: (response: AskQuestionResponse) => void
+  onError?: (error: string) => void
+}
+
 const getErrorMessage = (error: unknown) => {
   if (error instanceof DOMException && error.name === 'AbortError') {
     return 'The request was cancelled.'
@@ -27,7 +32,7 @@ const getErrorMessage = (error: unknown) => {
   return 'Something went wrong. Please try again.'
 }
 
-export const useAskQuestion = () => {
+export const useAskQuestion = (options: UseAskQuestionOptions = {}) => {
   const [state, setState] = useState<AskQuestionState>({ status: 'idle' })
   const abortControllerRef = useRef<AbortController | null>(null)
 
@@ -39,7 +44,7 @@ export const useAskQuestion = () => {
   }, [])
 
   const ask = useCallback(
-    async (question: string): Promise<AskQuestionResult> => {
+    async (question: string, sessionId?: string): Promise<AskQuestionResult> => {
       cancelOngoingRequest()
 
       const controller = new AbortController()
@@ -48,8 +53,9 @@ export const useAskQuestion = () => {
       setState({ status: 'loading' })
 
       try {
-        const data = await askQuestion(question, { signal: controller.signal })
+        const data = await askQuestion({ question, sessionId }, { signal: controller.signal })
         setState({ status: 'success', data })
+        options.onSuccess?.(data)
 
         return { ok: true, data }
       } catch (error) {
@@ -60,13 +66,14 @@ export const useAskQuestion = () => {
 
         const message = getErrorMessage(error)
         setState({ status: 'error', error: message })
+        options.onError?.(message)
 
         return { ok: false, error: message }
       } finally {
         abortControllerRef.current = null
       }
     },
-    [cancelOngoingRequest],
+    [cancelOngoingRequest, options],
   )
 
   const reset = useCallback(() => {

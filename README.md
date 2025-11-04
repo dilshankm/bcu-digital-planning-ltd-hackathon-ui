@@ -19,15 +19,15 @@ The development server runs on <http://localhost:5173> by default. Use Node.js 2
 
 ### Environment variables
 
-The application posts questions to `VITE_ASK_API_URL`. If the variable is not provided, it falls back to the discovery endpoint used during development.
+The application posts questions to the value defined by `VITE_API_BASE_URL` (or the legacy `VITE_ASK_API_URL`). If neither is provided, it falls back to the discovery endpoint used during development.
 
 ```bash
-VITE_ASK_API_URL=https://d1vhufjc9w8vpb.cloudfront.net/ask
+VITE_API_BASE_URL=https://d1vhufjc9w8vpb.cloudfront.net
 VITE_DEV_PROXY_ASK_TARGET=http://graph-rag-alb-890224410.eu-central-1.elb.amazonaws.com
 VITE_DEV_PROXY_ASK_PATH=/ask
 ```
 
-Create a `.env` file in the project root and override the value as required. The optional `VITE_DEV_PROXY_ASK_TARGET` enables a development proxy (see below) so you can sidestep CORS locally while keeping production requests pointed at the CloudFront distribution. Override `VITE_ASK_API_URL` if you need to target the ALB directly (for example, `http://graph-rag-alb-890224410.eu-central-1.elb.amazonaws.com/ask`).
+Create a `.env` file in the project root and override the value as required. The optional `VITE_DEV_PROXY_ASK_TARGET` enables a development proxy (see below) so you can sidestep CORS locally while keeping production requests pointed at the CloudFront distribution. Override `VITE_API_BASE_URL` if you need to target the ALB directly (for example, `http://graph-rag-alb-890224410.eu-central-1.elb.amazonaws.com`).
 
 ## Available scripts
 
@@ -36,6 +36,13 @@ Create a `.env` file in the project root and override the value as required. The
 - `npm run preview` – serve the production build locally
 - `npm run lint` – run ESLint across the project
 - `npm run copy:govuk-assets` – sync fonts and icons from `govuk-frontend` into `public/assets`
+
+## Advanced demo capabilities
+
+- Multi-turn conversation sessions with persistent history and session management
+- Automated query refinement feedback, including refinement timelines and metadata panes
+- Interactive graph explorer for nodes, relationships, and schema snapshots
+- CSV upload workflow to extend the graph schema during demonstrations
 
 ## Continuous deployment
 

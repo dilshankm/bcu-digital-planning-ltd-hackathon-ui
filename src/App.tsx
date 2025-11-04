@@ -1,15 +1,35 @@
 import { useMemo, useState } from 'react'
 
-import { useAskQuestion } from '@/hooks/useAskQuestion'
 import AnswerPanel from '@/components/AnswerPanel'
+import ConversationHistory from '@/components/ConversationHistory'
+import CsvImportForm from '@/components/CsvImportForm'
+import GraphExplorer from '@/components/GraphExplorer'
 import LoadingIndicator from '@/components/LoadingIndicator'
 import PageLayout from '@/components/PageLayout'
 import QuestionForm from '@/components/QuestionForm'
+import SessionControls from '@/components/SessionControls'
+import { useAskQuestion } from '@/hooks/useAskQuestion'
+import { useSession } from '@/hooks/useSession'
+
+type ActivePanel = 'ask' | 'explore' | 'import'
 
 const App = () => {
+  const { sessionId, history, isLoading: sessionLoading, error: sessionError, refreshHistory, startNewSession } =
+    useSession()
   const [question, setQuestion] = useState('')
   const [validationError, setValidationError] = useState<string | null>(null)
-  const { state, ask, isLoading } = useAskQuestion()
+  const [activePanel, setActivePanel] = useState<ActivePanel>('ask')
+  const [askNotice, setAskNotice] = useState<string | null>(null)
+
+  const { state, ask, isLoading } = useAskQuestion({
+    onSuccess: async () => {
+      await refreshHistory()
+      setAskNotice(null)
+    },
+    onError: (message) => {
+      setAskNotice(message)
+    },
+  })
 
   const handleSubmit = async () => {
     const trimmedQuestion = question.trim()
@@ -19,8 +39,13 @@ const App = () => {
       return
     }
 
+    if (!sessionId) {
+      setValidationError('Waiting for conversation session to be ready. Please try again in a moment.')
+      return
+    }
+
     setValidationError(null)
-    await ask(trimmedQuestion)
+    await ask(trimmedQuestion, sessionId)
   }
 
   const description = useMemo(
@@ -36,6 +61,42 @@ const App = () => {
 
   return (
     <PageLayout title="Innovation insight" description={description}>
+      <nav className="app-navigation" aria-label="Primary">
+        <ul className="app-navigation__list">
+          <li className="app-navigation__item">
+            <button
+              type="button"
+              className={`app-navigation__button ${activePanel === 'ask' ? 'app-navigation__button--active' : ''}`}
+              onClick={() => setActivePanel('ask')}
+            >
+              Ask assistant
+            </button>
+          </li>
+          <li className="app-navigation__item">
+            <button
+              type="button"
+              className={`app-navigation__button ${
+                activePanel === 'explore' ? 'app-navigation__button--active' : ''
+              }`}
+              onClick={() => setActivePanel('explore')}
+            >
+              Explore graph
+            </button>
+          </li>
+          <li className="app-navigation__item">
+            <button
+              type="button"
+              className={`app-navigation__button ${
+                activePanel === 'import' ? 'app-navigation__button--active' : ''
+              }`}
+              onClick={() => setActivePanel('import')}
+            >
+              Extend schema
+            </button>
+          </li>
+        </ul>
+      </nav>
+
       {state.status === 'error' && state.error && (
         <div
           className="govuk-error-summary"
@@ -57,26 +118,68 @@ const App = () => {
         </div>
       )}
 
-      <QuestionForm
-        value={question}
-        onChange={(value) => {
-          setQuestion(value)
-          if (validationError && value.trim()) {
-            setValidationError(null)
-          }
-        }}
-        onSubmit={handleSubmit}
-        isLoading={isLoading}
-        validationError={validationError}
-      />
-
-      {isLoading && (
-        <div className="govuk-!-margin-top-3" aria-live="polite">
-          <LoadingIndicator />
+      {sessionError && (
+        <div className="govuk-warning-text govuk-!-margin-bottom-4" role="alert">
+          <span className="govuk-warning-text__icon" aria-hidden="true">
+            !
+          </span>
+          <strong className="govuk-warning-text__text">
+            <span className="govuk-warning-text__assistive">Warning</span>
+            {sessionError}
+          </strong>
         </div>
       )}
 
-      {state.status === 'success' && state.data && <AnswerPanel response={state.data} />}
+      {activePanel === 'ask' && (
+        <div>
+          <SessionControls
+            sessionId={sessionId}
+            isLoading={sessionLoading}
+            onRefresh={refreshHistory}
+            onNewSession={async () => {
+              const id = await startNewSession()
+              if (id) {
+                setQuestion('')
+                setAskNotice('Started a new session. Ask your next question to build context.')
+              }
+              return id
+            }}
+          />
+
+          <QuestionForm
+            value={question}
+            onChange={(value) => {
+              setQuestion(value)
+              if (validationError && value.trim()) {
+                setValidationError(null)
+              }
+            }}
+            onSubmit={handleSubmit}
+            isLoading={isLoading}
+            validationError={validationError}
+          />
+
+          {askNotice && (
+            <div className="govuk-inset-text govuk-!-margin-top-2" role="status">
+              {askNotice}
+            </div>
+          )}
+
+          {(isLoading || sessionLoading) && (
+            <div className="govuk-!-margin-top-3" aria-live="polite">
+              <LoadingIndicator message={sessionLoading ? 'Preparing conversation session…' : undefined} />
+            </div>
+          )}
+
+          {state.status === 'success' && state.data && <AnswerPanel response={state.data} />}
+
+          <ConversationHistory messages={history} />
+        </div>
+      )}
+
+      {activePanel === 'explore' && <GraphExplorer />}
+
+      {activePanel === 'import' && <CsvImportForm />}
     </PageLayout>
   )
 }

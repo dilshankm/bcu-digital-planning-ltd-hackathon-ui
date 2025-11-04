@@ -1,4 +1,4 @@
-import { defineConfig, loadEnv } from 'vite'
+import { defineConfig, loadEnv, type ProxyOptions } from 'vite'
 import react from '@vitejs/plugin-react'
 import { createHash, webcrypto as nodeWebCrypto } from 'node:crypto'
 import { fileURLToPath, URL } from 'node:url'
@@ -41,6 +41,29 @@ export default defineConfig(({ mode }) => {
   const proxyTarget = env.VITE_DEV_PROXY_ASK_TARGET
   const proxyPath = env.VITE_DEV_PROXY_ASK_PATH ?? '/ask'
 
+  const normalisePrefix = (value: string) => (value.startsWith('/') ? value : `/${value}`)
+  const createProxyOptions = (target: string): ProxyOptions => ({
+    target,
+    changeOrigin: true,
+    secure: false,
+  })
+
+  const baseProxyPath = normalisePrefix(proxyPath)
+
+  const proxyEntries = proxyTarget
+    ? ['ask', 'session', 'schema', 'explore', 'import'].reduce<Record<string, string | ProxyOptions>>(
+        (accumulator, key) => {
+          const prefix = normalisePrefix(key)
+          accumulator[prefix] = createProxyOptions(proxyTarget)
+          accumulator[`${prefix}/`] = createProxyOptions(proxyTarget)
+          return accumulator
+        },
+        {
+          [baseProxyPath]: createProxyOptions(proxyTarget),
+        },
+      )
+    : undefined
+
   return {
     plugins: [react()],
     resolve: {
@@ -48,15 +71,9 @@ export default defineConfig(({ mode }) => {
         '@': fileURLToPath(new URL('./src', import.meta.url)),
       },
     },
-    server: proxyTarget
+    server: proxyEntries
       ? {
-          proxy: {
-            [proxyPath]: {
-              target: proxyTarget,
-              changeOrigin: true,
-              secure: false,
-            },
-          },
+          proxy: proxyEntries,
         }
       : undefined,
   }

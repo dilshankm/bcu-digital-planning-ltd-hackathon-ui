@@ -61,6 +61,23 @@ body {
   word-wrap: break-word;
 }
 
+.ask-answer__details {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.ask-answer__details-block {
+  margin: 0;
+}
+
+.ask-answer__code-block {
+  margin: 0;
+  padding: 1rem;
+  background-color: #f3f2f1;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
 .loading-indicator {
   display: inline-flex;
   align-items: center;
@@ -92,5 +109,179 @@ body {
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
   border: 0;
+}
+
+.app-navigation {
+  margin-bottom: 2rem;
+}
+
+.app-navigation__list {
+  display: flex;
+  gap: 1rem;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.app-navigation__button {
+  appearance: none;
+  border: 1px solid #0b0c0c;
+  background-color: #ffffff;
+  color: #0b0c0c;
+  padding: 0.6rem 1.4rem;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.app-navigation__button--active,
+.app-navigation__button:focus-visible,
+.app-navigation__button:hover {
+  border-color: #1d70b8;
+  color: #1d70b8;
+}
+
+.session-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.session-controls__details {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.session-controls__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.conversation-history {
+  margin-top: 2.5rem;
+  border-top: 1px solid #b1b4b6;
+  padding-top: 1.5rem;
+}
+
+.conversation-history__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 1.5rem;
+}
+
+.conversation-history__item {
+  background: #ffffff;
+  border-radius: 4px;
+  border: 1px solid #b1b4b6;
+  padding: 1rem 1.25rem;
+}
+
+.conversation-history__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.conversation-history__role {
+  font-weight: 700;
+}
+
+.conversation-history__timestamp {
+  color: #505a5f;
+  font-size: 0.9rem;
+}
+
+.conversation-history__content {
+  margin: 0;
+}
+
+.conversation-history--empty {
+  margin-top: 1.5rem;
+  padding: 1rem 1.25rem;
+  background: #f3f2f1;
+  border-radius: 4px;
+}
+
+.refinement-timeline__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 1.25rem;
+}
+
+.refinement-timeline__item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+
+.refinement-timeline__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background-color: #1d70b8;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.refinement-timeline__details {
+  background: #ffffff;
+  border-radius: 4px;
+  border: 1px solid #b1b4b6;
+  padding: 1rem 1.25rem;
+}
+
+.refinement-timeline__query {
+  margin: 0 0 0.75rem 0;
+  padding: 0.75rem;
+  background-color: #f3f2f1;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+.graph-explorer__code,
+.csv-import__code {
+  margin: 0;
+  padding: 1rem;
+  background-color: #f3f2f1;
+  border-radius: 4px;
+  overflow-x: auto;
+}
+
+.csv-import__status {
+  margin-top: 1.5rem;
+  padding: 1rem 1.25rem;
+  border-radius: 4px;
+}
+
+.csv-import__status--info {
+  background: #f3f2f1;
+}
+
+.csv-import__status--success {
+  background: #0b0c0c;
+  color: #ffffff;
+}
+
+.csv-import__status--error {
+  border: 1px solid #d4351c;
+  background: #f8d7da;
+}
+
+.graph-explorer .govuk-tabs__tab--selected {
+  border-bottom-color: transparent;
+  background-color: #f3f2f1;
 }
 
