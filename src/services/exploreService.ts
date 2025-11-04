@@ -1,23 +1,22 @@
 import { config } from '@/config'
+import { buildUnexpectedResponseError, parseResponseBody } from '@/utils/http'
 
-const parseResponse = async (response: Response) => {
-  try {
-    const body = await response.json()
-    if (!response.ok) {
-      const message =
-        (body && typeof body === 'object' && 'error' in body
-          ? String((body as Record<string, unknown>).error)
-          : response.statusText) || 'Request failed'
-      throw new Error(message)
-    }
+const handleResponse = async (response: Response) => {
+  const { json, raw, isJson } = await parseResponseBody(response)
 
-    return body
-  } catch (error) {
-    if (error instanceof Error) {
-      throw error
-    }
-    throw new Error('Unable to parse server response')
+  if (!response.ok) {
+    const message =
+      (isJson && json && typeof json === 'object' && 'error' in json
+        ? String((json as Record<string, unknown>).error)
+        : response.statusText) || buildUnexpectedResponseError(raw)
+    throw new Error(message)
   }
+
+  if (!isJson) {
+    throw new Error(buildUnexpectedResponseError(raw))
+  }
+
+  return json
 }
 
 const buildQueryString = (params: Record<string, unknown>) =>
@@ -34,12 +33,12 @@ export const fetchNodes = async (params: {
   const query = buildQueryString(params)
   const endpoint = config.buildApiPath(query ? `/explore/nodes?${query}` : '/explore/nodes')
 
-  return parseResponse(await fetch(endpoint))
+  return handleResponse(await fetch(endpoint))
 }
 
 export const fetchNodeDetail = async (nodeId: string) => {
   const endpoint = config.buildApiPath(`/explore/node/${encodeURIComponent(nodeId)}`)
-  return parseResponse(await fetch(endpoint))
+  return handleResponse(await fetch(endpoint))
 }
 
 export const fetchRelationships = async (params: {
@@ -50,10 +49,10 @@ export const fetchRelationships = async (params: {
   const endpoint = config.buildApiPath(
     query ? `/explore/relationships?${query}` : '/explore/relationships',
   )
-  return parseResponse(await fetch(endpoint))
+  return handleResponse(await fetch(endpoint))
 }
 
 export const fetchSchema = async () => {
   const endpoint = config.buildApiPath('/schema')
-  return parseResponse(await fetch(endpoint))
+  return handleResponse(await fetch(endpoint))
 }

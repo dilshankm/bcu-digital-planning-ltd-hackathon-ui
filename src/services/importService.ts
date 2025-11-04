@@ -1,4 +1,5 @@
 import { config } from '@/config'
+import { buildUnexpectedResponseError, parseResponseBody } from '@/utils/http'
 
 export interface CsvImportOptions {
   targetLabel?: string
@@ -23,22 +24,19 @@ export const importCsv = async (file: File, options: CsvImportOptions = {}) => {
     body: formData,
   })
 
-  try {
-    const body = await response.json()
+  const { json, raw, isJson } = await parseResponseBody(response)
 
-    if (!response.ok) {
-      const message =
-        (body && typeof body === 'object' && 'error' in body
-          ? String((body as Record<string, unknown>).error)
-          : response.statusText) || 'CSV import failed'
-      throw new Error(message)
-    }
-
-    return body
-  } catch (error) {
-    if (error instanceof Error) {
-      throw error
-    }
-    throw new Error('Unable to parse server response')
+  if (!response.ok) {
+    const message =
+      (isJson && json && typeof json === 'object' && 'error' in json
+        ? String((json as Record<string, unknown>).error)
+        : response.statusText) || buildUnexpectedResponseError(raw)
+    throw new Error(message)
   }
+
+  if (!isJson) {
+    throw new Error(buildUnexpectedResponseError(raw))
+  }
+
+  return json
 }

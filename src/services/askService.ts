@@ -1,5 +1,6 @@
 import { config } from '@/config'
 import type { AskQuestionResponse } from '@/types/ask'
+import { buildUnexpectedResponseError, parseResponseBody } from '@/utils/http'
 
 export interface AskQuestionParams {
   question: string
@@ -37,26 +38,19 @@ export const askQuestion = async (
     signal: options.signal,
   })
 
-  let body: unknown
-
-  try {
-    body = await response.json()
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error'
-    throw new Error(`Unable to parse server response: ${message}`)
-  }
+  const { json: body, raw, isJson } = await parseResponseBody<AskQuestionResponse>(response)
 
   if (!response.ok) {
     const errorMessage =
-      (typeof body === 'object' && body !== null && 'error' in body
+      (isJson && body && typeof body === 'object' && 'error' in body
         ? String((body as Record<string, unknown>).error)
-        : null) ?? response.statusText
+        : null) ?? response.statusText ?? buildUnexpectedResponseError(raw)
 
     throw new Error(errorMessage || 'The service returned an error')
   }
 
-  if (!isAskQuestionResponse(body)) {
-    throw new Error('Received an unexpected response format from the service')
+  if (!isJson || !isAskQuestionResponse(body)) {
+    throw new Error(buildUnexpectedResponseError(raw))
   }
 
   return body

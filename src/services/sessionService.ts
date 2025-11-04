@@ -1,14 +1,6 @@
 import { config } from '@/config'
 import type { ConversationSession } from '@/types/session'
-
-const parseJson = async (response: Response) => {
-  try {
-    return await response.json()
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error'
-    throw new Error(`Unable to parse server response: ${message}`)
-  }
-}
+import { buildUnexpectedResponseError, parseResponseBody } from '@/utils/http'
 
 export const createSession = async (): Promise<string> => {
   const endpoint = config.buildApiPath('/session')
@@ -21,39 +13,47 @@ export const createSession = async (): Promise<string> => {
     body: JSON.stringify({}),
   })
 
-  const payload = await parseJson(response)
+  const { json: payload, raw, isJson } = await parseResponseBody<{ session_id?: unknown; error?: unknown }>(
+    response,
+  )
 
   if (!response.ok) {
     const message =
-      (payload && typeof payload === 'object' && 'error' in payload
-        ? String((payload as Record<string, unknown>).error)
-        : response.statusText) || 'Failed to create session'
+      (isJson && payload && typeof payload === 'object' && 'error' in payload
+        ? String(payload.error)
+        : response.statusText) || buildUnexpectedResponseError(raw)
     throw new Error(message)
   }
 
-  if (payload && typeof payload === 'object' && 'session_id' in payload) {
-    return String((payload as Record<string, unknown>).session_id)
+  if (isJson && payload && typeof payload === 'object' && 'session_id' in payload) {
+    return String(payload.session_id)
   }
 
-  throw new Error('Session creation response did not include a session_id')
+  throw new Error(buildUnexpectedResponseError(raw))
 }
 
 export const fetchSessionHistory = async (sessionId: string): Promise<ConversationSession> => {
   const endpoint = config.buildApiPath(`/session/${sessionId}`)
 
   const response = await fetch(endpoint)
-  const payload = await parseJson(response)
+  const { json: payload, raw, isJson } = await parseResponseBody<{ messages?: unknown; created_at?: unknown; updated_at?: unknown; error?: unknown }>(
+    response,
+  )
 
   if (!response.ok) {
     const message =
-      (payload && typeof payload === 'object' && 'error' in payload
-        ? String((payload as Record<string, unknown>).error)
-        : response.statusText) || 'Failed to retrieve session history'
+      (isJson && payload && typeof payload === 'object' && 'error' in payload
+        ? String(payload.error)
+        : response.statusText) || buildUnexpectedResponseError(raw)
     throw new Error(message)
   }
 
+  if (!isJson || !payload || typeof payload !== 'object') {
+    throw new Error(buildUnexpectedResponseError(raw))
+  }
+
   const messages =
-    payload && typeof payload === 'object' && 'messages' in payload
+    'messages' in payload
       ? (payload as { messages: unknown }).messages
       : []
 
@@ -66,11 +66,11 @@ export const fetchSessionHistory = async (sessionId: string): Promise<Conversati
   return {
     sessionId,
     createdAt:
-      payload && typeof payload === 'object' && 'created_at' in payload
+      'created_at' in payload
         ? String((payload as Record<string, unknown>).created_at)
         : undefined,
     updatedAt:
-      payload && typeof payload === 'object' && 'updated_at' in payload
+      'updated_at' in payload
         ? String((payload as Record<string, unknown>).updated_at)
         : undefined,
     messages: safeMessages,
