@@ -22,12 +22,12 @@ The development server runs on <http://localhost:5173> by default. Use Node.js 2
 The application posts questions to `VITE_ASK_API_URL`. If the variable is not provided, it falls back to the discovery endpoint used during development.
 
 ```bash
-VITE_ASK_API_URL=https://d1vhufjc9w8vpb.cloudfront.net/api/ask
+VITE_ASK_API_URL=https://d1vhufjc9w8vpb.cloudfront.net/ask
 VITE_DEV_PROXY_ASK_TARGET=http://graph-rag-alb-890224410.eu-central-1.elb.amazonaws.com
 VITE_DEV_PROXY_ASK_PATH=/ask
 ```
 
-Create a `.env` file in the project root and override the value as required. The optional `VITE_DEV_PROXY_ASK_TARGET` enables a development proxy (see below) so you can sidestep CORS locally while keeping production requests pointed at the CloudFront distribution. Override `VITE_ASK_API_URL` if you need to target the ALB directly (for example, in environments without the CloudFront layer).
+Create a `.env` file in the project root and override the value as required. The optional `VITE_DEV_PROXY_ASK_TARGET` enables a development proxy (see below) so you can sidestep CORS locally while keeping production requests pointed at the CloudFront distribution. Override `VITE_ASK_API_URL` if you need to target the ALB directly (for example, `http://graph-rag-alb-890224410.eu-central-1.elb.amazonaws.com/ask`).
 
 ## Available scripts
 

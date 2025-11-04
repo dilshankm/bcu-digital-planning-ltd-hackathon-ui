@@ -1,4 +1,4 @@
-const DEFAULT_ASK_ENDPOINT = 'https://d1vhufjc9w8vpb.cloudfront.net/api/ask'
+const DEFAULT_ASK_ENDPOINT = 'https://d1vhufjc9w8vpb.cloudfront.net/ask'
 
 const devAskPath = import.meta.env.VITE_DEV_PROXY_ASK_PATH ?? '/ask'
 
