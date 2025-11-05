@@ -155,9 +155,23 @@ export const GraphCanvas = memo(({ data, caption, height = 700, onNodeSelect, sh
       // Only add types that are truthy and not empty
       if (typed.label && typed.label.trim() !== '') {
         types.add(typed.label)
+      } else {
+        // Log links without labels for debugging
+        console.warn('Link without label found:', {
+          id: typed.id,
+          source: typed.source,
+          target: typed.target,
+          properties: typed.properties
+        })
       }
     })
-    return Array.from(types).sort()
+    const typesArray = Array.from(types).sort()
+    console.log('=== LINK TYPES FOR LEGEND ===')
+    console.log('Unique link types:', typesArray)
+    console.log('Total links:', filteredGraphData.links.length)
+    console.log('Links with labels:', filteredGraphData.links.filter(l => (l as ForceGraphLink).label).length)
+    console.log('Links without labels:', filteredGraphData.links.filter(l => !(l as ForceGraphLink).label).length)
+    return typesArray
   }, [filteredGraphData.links])
 
   // Find connected nodes for highlighting
@@ -624,8 +638,17 @@ export const GraphCanvas = memo(({ data, caption, height = 700, onNodeSelect, sh
               <h5 className="govuk-heading-xs govuk-!-margin-bottom-1">Relationship Types</h5>
               <div className="graph-canvas__legend-items">
                 {linkTypes.map((type) => {
+                  // Safety check: ensure type is a string and not empty
+                  if (!type || typeof type !== 'string' || type.trim() === '' || type.startsWith('link-')) {
+                    console.warn('Invalid link type in legend, skipping:', type)
+                    return null
+                  }
+                  
                   const isHidden = hiddenLinkTypes.has(type)
-                  const count = filteredGraphData.links.filter((l) => (l as ForceGraphLink).label === type).length
+                  const count = filteredGraphData.links.filter((l) => {
+                    const typed = l as ForceGraphLink
+                    return typed.label === type && typed.label && typeof typed.label === 'string'
+                  }).length
                   
                   return (
                     <label key={type} className="graph-canvas__legend-item">
@@ -640,7 +663,7 @@ export const GraphCanvas = memo(({ data, caption, height = 700, onNodeSelect, sh
                       </span>
                     </label>
                   )
-                })}
+                }).filter(Boolean)}
               </div>
             </div>
           )}
