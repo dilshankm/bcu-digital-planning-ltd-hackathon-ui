@@ -27,7 +27,6 @@ export const GraphExplorer = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedNode, setSelectedNode] = useState<NormalisedGraphNode | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
   
   // Pagination state
   const [nodePage, setNodePage] = useState(0)
@@ -61,7 +60,6 @@ export const GraphExplorer = () => {
     setActiveTab(tab)
     setError(null)
     setSelectedNode(null)
-    setSearchQuery('')
     setNodePage(0)
     setRelationshipPage(0)
     // Optionally clear results from other tabs
@@ -173,11 +171,10 @@ export const GraphExplorer = () => {
         label: nodeLabel || undefined,
         limit: nodePageSize,
         skip,
-        search: searchQuery.trim() || undefined,
       })
       setNodeResults(results)
     })
-  }, [nodeLabel, nodePage, nodePageSize, searchQuery, runSafely])
+  }, [nodeLabel, nodePage, nodePageSize, runSafely])
 
   const handleFetchRelationships = useCallback(() => {
     void runSafely(async () => {
@@ -307,24 +304,6 @@ export const GraphExplorer = () => {
                   />
                 )}
               </div>
-              <div className="graph-explorer__form-field">
-                <label className="govuk-label" htmlFor="node-search-input">
-                  Search
-                </label>
-                <input
-                  className="govuk-input"
-                  id="node-search-input"
-                  name="node-search-input"
-                  type="search"
-                  value={searchQuery}
-                  onChange={(event) => {
-                    setSearchQuery(event.target.value)
-                    setNodeResults(null) // Clear results when search changes
-                    setNodePage(0) // Reset pagination
-                  }}
-                  placeholder="Search by name, ID, or description..."
-                />
-              </div>
             </div>
             <div className="graph-explorer__form-actions">
               <button className="govuk-button" type="submit" disabled={isLoading}>
@@ -337,7 +316,6 @@ export const GraphExplorer = () => {
                   onClick={() => {
                     setNodeResults(null)
                     setNodePage(0)
-                    setSearchQuery('')
                   }}
                   disabled={isLoading}
                 >
@@ -353,7 +331,6 @@ export const GraphExplorer = () => {
                   Showing {nodeGraph.nodes.length} node{nodeGraph.nodes.length === 1 ? '' : 's'}
                   {nodePagination?.total !== undefined && ` of ${nodePagination.total.toLocaleString()}`}
                   {nodeLabel ? ` of type "${nodeLabel}"` : ''}
-                  {searchQuery && ` (search: "${searchQuery}")`}
                 </p>
               </div>
               {nodePagination && nodePagination.total !== undefined && nodePagination.total > nodePageSize && (
