@@ -568,70 +568,83 @@ export const GraphExplorer = () => {
               Refresh statistics
             </button>
           </div>
-          {hasValue(stats) && (
-            <div className="graph-explorer__visual govuk-!-margin-top-4">
-              <div className="schema-summary">
-                {typeof stats === 'object' && stats !== null && (
-                  <>
-                    {(stats as Record<string, unknown>).total_nodes !== undefined && (
-                      <div className="schema-summary__stats govuk-!-margin-bottom-4">
-                        <div className="schema-summary__stat">
-                          <span className="schema-summary__stat-label">Total Nodes</span>
-                          <span className="schema-summary__stat-value">
-                            {typeof (stats as Record<string, unknown>).total_nodes === 'number'
-                              ? (stats as Record<string, unknown>).total_nodes.toLocaleString()
-                              : String((stats as Record<string, unknown>).total_nodes)}
-                          </span>
-                        </div>
-                        {(stats as Record<string, unknown>).total_relationships !== undefined && (
-                          <div className="schema-summary__stat">
-                            <span className="schema-summary__stat-label">Total Relationships</span>
-                            <span className="schema-summary__stat-value">
-                              {typeof (stats as Record<string, unknown>).total_relationships === 'number'
-                                ? (stats as Record<string, unknown>).total_relationships.toLocaleString()
-                                : String((stats as Record<string, unknown>).total_relationships)}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    {(stats as Record<string, unknown>).node_counts && (
-                      <div className="schema-summary__section">
-                        <h3 className="govuk-heading-s govuk-!-margin-bottom-2">Node Counts by Type</h3>
-                        <ul className="govuk-list govuk-list--bullet govuk-!-margin-bottom-4">
-                          {Object.entries(
-                            (stats as Record<string, unknown>).node_counts as Record<string, number>
+              {hasValue(stats) && (
+                <div className="graph-explorer__visual govuk-!-margin-top-4">
+                  <div className="schema-summary">
+                    {typeof stats === 'object' && stats !== null && (
+                      <>
+                        {(() => {
+                          const statsObj = stats as Record<string, unknown>
+                          const totalNodes = statsObj.total_nodes
+                          const totalRelationships = statsObj.total_relationships
+                          
+                          const formatValue = (value: unknown): string => {
+                            if (typeof value === 'number') {
+                              return value.toLocaleString()
+                            }
+                            return String(value ?? '')
+                          }
+                          
+                          return (
+                            <>
+                              {totalNodes !== undefined && (
+                                <div className="schema-summary__stats govuk-!-margin-bottom-4">
+                                  <div className="schema-summary__stat">
+                                    <span className="schema-summary__stat-label">Total Nodes</span>
+                                    <span className="schema-summary__stat-value">
+                                      {formatValue(totalNodes)}
+                                    </span>
+                                  </div>
+                                  {totalRelationships !== undefined && (
+                                    <div className="schema-summary__stat">
+                                      <span className="schema-summary__stat-label">Total Relationships</span>
+                                      <span className="schema-summary__stat-value">
+                                        {formatValue(totalRelationships)}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                              {statsObj.node_counts && (
+                                <div className="schema-summary__section">
+                                  <h3 className="govuk-heading-s govuk-!-margin-bottom-2">Node Counts by Type</h3>
+                                  <ul className="govuk-list govuk-list--bullet govuk-!-margin-bottom-4">
+                                    {Object.entries(
+                                      statsObj.node_counts as Record<string, number>
+                                    )
+                                      .sort(([, a], [, b]) => b - a)
+                                      .map(([type, count]) => (
+                                        <li key={type}>
+                                          {type}: <strong>{count.toLocaleString()}</strong>
+                                        </li>
+                                      ))}
+                                  </ul>
+                                </div>
+                              )}
+                              {statsObj.relationship_counts && (
+                                <div className="schema-summary__section">
+                                  <h3 className="govuk-heading-s govuk-!-margin-bottom-2">Relationship Counts by Type</h3>
+                                  <ul className="govuk-list govuk-list--bullet govuk-!-margin-bottom-4">
+                                    {Object.entries(
+                                      statsObj.relationship_counts as Record<string, number>
+                                    )
+                                      .sort(([, a], [, b]) => b - a)
+                                      .map(([type, count]) => (
+                                        <li key={type}>
+                                          {type}: <strong>{count.toLocaleString()}</strong>
+                                        </li>
+                                      ))}
+                                  </ul>
+                                </div>
+                              )}
+                            </>
                           )
-                            .sort(([, a], [, b]) => b - a)
-                            .map(([type, count]) => (
-                              <li key={type}>
-                                {type}: <strong>{count.toLocaleString()}</strong>
-                              </li>
-                            ))}
-                        </ul>
-                      </div>
+                        })()}
+                      </>
                     )}
-                    {(stats as Record<string, unknown>).relationship_counts && (
-                      <div className="schema-summary__section">
-                        <h3 className="govuk-heading-s govuk-!-margin-bottom-2">Relationship Counts by Type</h3>
-                        <ul className="govuk-list govuk-list--bullet govuk-!-margin-bottom-4">
-                          {Object.entries(
-                            (stats as Record<string, unknown>).relationship_counts as Record<string, number>
-                          )
-                            .sort(([, a], [, b]) => b - a)
-                            .map(([type, count]) => (
-                              <li key={type}>
-                                {type}: <strong>{count.toLocaleString()}</strong>
-                              </li>
-                            ))}
-                        </ul>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-          )}
+                  </div>
+                </div>
+              )}
           {!hasValue(stats) && !isLoading && (
             <p className="govuk-body govuk-!-margin-top-3">
               Statistics will load automatically. Use the button above to refresh.
