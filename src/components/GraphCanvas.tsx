@@ -52,14 +52,14 @@ const getNodeColor = (node: ForceGraphNode): string => {
   return defaultNodeColour
 }
 
-// Get display name for a node, preferring display_name, then constructing from properties, then label, NEVER id
+// Get display name for a node, using display_name from API, NEVER show numbers
 const getNodeDisplayName = (node: ForceGraphNode): string => {
-  // First check for display_name (API returns this at top level)
+  // First priority: display_name from API (API returns this at top level)
   if (node.display_name && typeof node.display_name === 'string' && node.display_name.trim() !== '') {
     return node.display_name
   }
   
-  // Try to construct name from properties
+  // Second priority: construct name from properties (firstName/lastName, name, description)
   if (node.properties && typeof node.properties === 'object') {
     const props = node.properties as Record<string, unknown>
     const nameParts: string[] = []
@@ -87,15 +87,13 @@ const getNodeDisplayName = (node: ForceGraphNode): string => {
     }
   }
   
-  // Fall back to label (node type) - this should always be available
+  // Third priority: use label (node type) only, NO numbers
   if (node.label && typeof node.label === 'string' && node.label.trim() !== '') {
-    // If label is available, use it with ID for uniqueness
-    const nodeId = String(node.id ?? '')
-    return `${node.label} ${nodeId}`
+    return node.label
   }
   
-  // Last resort: show ID instead of generic "Node"
-  return String(node.id ?? 'Unknown')
+  // Last resort: return empty string or a generic label, but NEVER show ID numbers
+  return ''
 }
 
 export const GraphCanvas = memo(({ data, caption, height = 700, onNodeSelect, showControls = false }: GraphCanvasProps) => {
