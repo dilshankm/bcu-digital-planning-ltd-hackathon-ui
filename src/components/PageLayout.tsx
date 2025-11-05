@@ -29,7 +29,7 @@ export const PageLayout = ({ title, description, children }: PageLayoutProps) =>
       <div className="govuk-width-container">
         <div className="govuk-main-wrapper govuk-main-wrapper--auto-spacing">
           <div className="govuk-grid-row">
-            <div className="govuk-grid-column-two-thirds">
+            <div className="govuk-grid-column-full">
               <span className="govuk-caption-l">
                 BCU Hackathon Challenge - Synthea Healthcare Dataset
               </span>

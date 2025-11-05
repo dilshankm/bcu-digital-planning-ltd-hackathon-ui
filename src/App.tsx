@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 
 import AnswerPanel from '@/components/AnswerPanel'
 import ConversationHistory from '@/components/ConversationHistory'
-import CsvImportForm from '@/components/CsvImportForm'
+// import CsvImportForm from '@/components/CsvImportForm'
 import GraphExplorer from '@/components/GraphExplorer'
 import LoadingIndicator from '@/components/LoadingIndicator'
 import PageLayout from '@/components/PageLayout'
@@ -11,7 +11,7 @@ import SessionControls from '@/components/SessionControls'
 import { useAskQuestion } from '@/hooks/useAskQuestion'
 import { useSession } from '@/hooks/useSession'
 
-type ActivePanel = 'ask' | 'explore' | 'import'
+type ActivePanel = 'ask' | 'explore' // | 'import'
 
 const App = () => {
   const { sessionId, history, isLoading: sessionLoading, error: sessionError, refreshHistory, startNewSession } =
@@ -88,7 +88,7 @@ const App = () => {
               Explore graph
             </button>
           </li>
-          <li className="app-navigation__item">
+          {/* <li className="app-navigation__item">
             <button
               type="button"
               className={`app-navigation__button ${
@@ -98,7 +98,7 @@ const App = () => {
             >
               Extend schema
             </button>
-          </li>
+          </li> */}
         </ul>
       </nav>
 
@@ -184,7 +184,7 @@ const App = () => {
 
       {activePanel === 'explore' && <GraphExplorer />}
 
-      {activePanel === 'import' && <CsvImportForm />}
+      {/* {activePanel === 'import' && <CsvImportForm />} */}
     </PageLayout>
   )
 }
