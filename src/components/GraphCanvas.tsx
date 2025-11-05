@@ -139,25 +139,26 @@ export const GraphCanvas = memo(({ data, caption, height = 700, onNodeSelect, sh
   // Get unique node and link types for legend
   const nodeTypes = useMemo(() => {
     const types = new Set<string>()
-    graphData.nodes.forEach((node) => {
+    filteredGraphData.nodes.forEach((node) => {
       const typed = node as ForceGraphNode
       if (typed.label) {
         types.add(typed.label)
       }
     })
     return Array.from(types).sort()
-  }, [graphData.nodes])
+  }, [filteredGraphData.nodes])
 
   const linkTypes = useMemo(() => {
     const types = new Set<string>()
-    graphData.links.forEach((link) => {
+    filteredGraphData.links.forEach((link) => {
       const typed = link as ForceGraphLink
-      if (typed.label) {
+      // Only add types that are truthy and not empty
+      if (typed.label && typed.label.trim() !== '') {
         types.add(typed.label)
       }
     })
     return Array.from(types).sort()
-  }, [graphData.links])
+  }, [filteredGraphData.links])
 
   // Find connected nodes for highlighting
   const connectedNodeIds = useMemo(() => {
@@ -420,9 +421,11 @@ export const GraphCanvas = memo(({ data, caption, height = 700, onNodeSelect, sh
           const typed = link as ForceGraphLink
           const parts: string[] = []
           
-          // Relationship type
+          // Relationship type - show "Unknown" if missing instead of ID
           if (typed.label) {
             parts.push(`Type: ${typed.label}`)
+          } else {
+            parts.push('Type: Unknown')
           }
           
           // Relationship properties

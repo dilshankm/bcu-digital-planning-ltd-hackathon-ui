@@ -118,6 +118,10 @@ export const GraphExplorer = () => {
     const normalized = normaliseGraphData(relationshipResults)
     console.log('Normalized relationship graph:', normalized)
     console.log('Nodes:', normalized.nodes.length, 'Links:', normalized.links.length)
+    if (normalized.links.length > 0) {
+      console.log('Sample links:', normalized.links.slice(0, 3))
+      console.log('Link labels:', normalized.links.map(l => ({ id: l.id, label: l.label, source: l.source, target: l.target })).slice(0, 5))
+    }
     return normalized
   }, [relationshipResults])
 
@@ -184,7 +188,11 @@ export const GraphExplorer = () => {
         limit: relationshipPageSize,
         skip,
       })
-      console.log('Relationship API response:', results)
+      console.log('Relationship API response (raw):', results)
+      if (results && typeof results === 'object' && 'relationships' in results && Array.isArray((results as Record<string, unknown>).relationships)) {
+        const rels = (results as Record<string, unknown>).relationships as unknown[]
+        console.log('Sample relationship:', rels[0])
+      }
       setRelationshipResults(results)
     })
   }, [relationshipType, relationshipPage, relationshipPageSize, runSafely])
