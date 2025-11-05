@@ -87,13 +87,15 @@ const getNodeDisplayName = (node: ForceGraphNode): string => {
     }
   }
   
-  // Fall back to label (node type) but NEVER id
+  // Fall back to label (node type) - this should always be available
   if (node.label && typeof node.label === 'string' && node.label.trim() !== '') {
-    return node.label
+    // If label is available, use it with ID for uniqueness
+    const nodeId = String(node.id ?? '')
+    return `${node.label} ${nodeId}`
   }
   
-  // Last resort: use a generic name instead of ID
-  return 'Node'
+  // Last resort: show ID instead of generic "Node"
+  return String(node.id ?? 'Unknown')
 }
 
 export const GraphCanvas = memo(({ data, caption, height = 700, onNodeSelect, showControls = false }: GraphCanvasProps) => {
