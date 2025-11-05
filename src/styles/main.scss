@@ -37,6 +37,11 @@ body {
   width: min(960px, 100%);
 }
 
+.govuk-grid-row {
+  display: flex;
+  justify-content: center;
+}
+
 .ask-form__actions {
   display: flex;
   flex-wrap: wrap;
