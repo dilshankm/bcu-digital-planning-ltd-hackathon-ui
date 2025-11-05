@@ -43,9 +43,9 @@ export const AnswerPanel = ({ response }: AnswerPanelProps) => {
       {/* Cypher Query Display */}
       {response.cypher_query && <CypherQueryDisplay query={response.cypher_query} />}
 
-      {/* Traversal Paths & Graph Dependencies */}
+      {/* Traversal Paths */}
       {response.traversal_paths && response.traversal_paths.length > 0 && (
-        <TraversalPathsDisplay paths={response.traversal_paths} nodesUsed={response.nodes_used} />
+        <TraversalPathsDisplay paths={response.traversal_paths} />
       )}
 
       {/* Explainability Panel */}

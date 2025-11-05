@@ -2,7 +2,6 @@ import type { TraversalPath } from '@/types/ask'
 
 interface TraversalPathsDisplayProps {
   paths: TraversalPath[]
-  nodesUsed?: string[]
 }
 
 // Helper to extract meaningful node display from path data
@@ -51,7 +50,7 @@ const NodeDisplay = ({ node }: { node: { id: string; label?: string; type?: stri
   return <span className="traversal-paths-display__node">{node.id}</span>
 }
 
-export const TraversalPathsDisplay = ({ paths, nodesUsed }: TraversalPathsDisplayProps) => {
+export const TraversalPathsDisplay = ({ paths }: TraversalPathsDisplayProps) => {
   if (!paths || paths.length === 0) {
     return null
   }
