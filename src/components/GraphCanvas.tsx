@@ -52,6 +52,45 @@ const getNodeColor = (node: ForceGraphNode): string => {
   return defaultNodeColour
 }
 
+// Get display name for a node, preferring display_name, then constructing from properties, then label, then id
+const getNodeDisplayName = (node: ForceGraphNode): string => {
+  // First check for display_name
+  if (node.display_name) {
+    return node.display_name
+  }
+  
+  // Try to construct name from properties
+  if (node.properties && typeof node.properties === 'object') {
+    const props = node.properties as Record<string, unknown>
+    const nameParts: string[] = []
+    
+    // Check for firstName/lastName
+    if (props.firstName && typeof props.firstName === 'string') {
+      nameParts.push(props.firstName)
+    }
+    if (props.lastName && typeof props.lastName === 'string') {
+      nameParts.push(props.lastName)
+    }
+    
+    // Check for full name
+    if (props.name && typeof props.name === 'string' && nameParts.length === 0) {
+      nameParts.push(props.name)
+    }
+    
+    // Check for description
+    if (props.description && typeof props.description === 'string' && nameParts.length === 0) {
+      nameParts.push(props.description)
+    }
+    
+    if (nameParts.length > 0) {
+      return nameParts.join(' ').trim()
+    }
+  }
+  
+  // Fall back to label or id
+  return node.label ?? String(node.id ?? 'Unknown')
+}
+
 export const GraphCanvas = memo(({ data, caption, height = 700, onNodeSelect, showControls = false }: GraphCanvasProps) => {
   const graphRef = useRef<ForceGraphMethods | null>(null)
   const [hoveredNode, setHoveredNode] = useState<string | null>(null)
@@ -379,25 +418,90 @@ export const GraphCanvas = memo(({ data, caption, height = 700, onNodeSelect, sh
         linkCurvature={0.1}
         linkLabel={(link) => {
           const typed = link as ForceGraphLink
-          return typed.label ?? ''
+          const parts: string[] = []
+          
+          // Relationship type
+          if (typed.label) {
+            parts.push(`Type: ${typed.label}`)
+          }
+          
+          // Relationship properties
+          if (typed.properties && typeof typed.properties === 'object') {
+            const props = Object.entries(typed.properties)
+              .filter(([key]) => key !== 'display_name') // Exclude display_name from link tooltip
+              .map(([key, value]) => {
+                const valStr = typeof value === 'object' ? JSON.stringify(value) : String(value)
+                return `${key}: ${valStr}`
+              })
+            if (props.length > 0) {
+              parts.push('')
+              parts.push(...props)
+            }
+          }
+          
+          // Get source and target node names
+          const sourceNode = filteredGraphData.nodes.find((n) => {
+            const nId = typeof typed.source === 'object' ? String((typed.source as NodeObject).id ?? '') : String(typed.source ?? '')
+            return String(n.id ?? '') === nId
+          }) as ForceGraphNode | undefined
+          
+          const targetNode = filteredGraphData.nodes.find((n) => {
+            const nId = typeof typed.target === 'object' ? String((typed.target as NodeObject).id ?? '') : String(typed.target ?? '')
+            return String(n.id ?? '') === nId
+          }) as ForceGraphNode | undefined
+          
+          if (sourceNode || targetNode) {
+            parts.push('')
+            if (sourceNode) {
+              parts.push(`From: ${getNodeDisplayName(sourceNode)}`)
+            }
+            if (targetNode) {
+              parts.push(`To: ${getNodeDisplayName(targetNode)}`)
+            }
+          }
+          
+          return parts.length > 0 ? parts.join('\n') : 'Relationship'
         }}
         nodeLabel={(node) => {
           const typed = node as ForceGraphNode
-          const label = typed.label ?? typed.id
+          const parts: string[] = []
           
-          // Format properties nicely
-          if (typed.properties && typeof typed.properties === 'object') {
-            const props = Object.entries(typed.properties)
-              .map(([key, value]) => `${key}: ${value}`)
-              .join('\n')
-            return `${label}\n\n${props}`
+          // Display name
+          const displayName = getNodeDisplayName(typed)
+          parts.push(displayName)
+          
+          // Node type/label
+          if (typed.label) {
+            parts.push(`Type: ${typed.label}`)
           }
           
-          return label
+          // Node ID
+          parts.push(`ID: ${typed.id}`)
+          
+          // All properties
+          if (typed.properties && typeof typed.properties === 'object') {
+            const props = Object.entries(typed.properties)
+              .filter(([key]) => {
+                // Exclude common fields already shown or redundant
+                return !['display_name', 'firstName', 'lastName', 'name'].includes(key)
+              })
+              .map(([key, value]) => {
+                const valStr = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)
+                return `${key}: ${valStr}`
+              })
+            if (props.length > 0) {
+              parts.push('')
+              parts.push('Properties:')
+              parts.push(...props)
+            }
+          }
+          
+          return parts.join('\n')
         }}
         nodeCanvasObject={(node, ctx: CanvasRenderingContext2D, globalScale: number) => {
           const typed = node as ForceGraphNode
-          const label = typed.label ?? typed.id
+          // Get display name using helper function
+          const displayName = getNodeDisplayName(typed)
           const fontSize = Math.max(12 / globalScale, 6)
           const baseRadius = 10
           const isHovered = hoveredNode === typed.id
@@ -436,7 +540,7 @@ export const GraphCanvas = memo(({ data, caption, height = 700, onNodeSelect, sh
           ctx.textAlign = 'center'
           ctx.textBaseline = 'top'
           ctx.fillStyle = nodeTextColour
-          ctx.fillText(label, typed.x ?? 0, (typed.y ?? 0) + radius + 2)
+          ctx.fillText(displayName, typed.x ?? 0, (typed.y ?? 0) + radius + 2)
         }}
         onNodeHover={(node: NodeObject | null) => {
           setHoveredNode(node ? (node.id?.toString() ?? null) : null)

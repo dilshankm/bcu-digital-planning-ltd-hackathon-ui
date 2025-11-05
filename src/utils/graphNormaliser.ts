@@ -1,6 +1,7 @@
 export interface NormalisedGraphNode {
   id: string
   label?: string
+  display_name?: string // User-friendly display name from API
   properties?: Record<string, unknown>
 }
 
@@ -118,10 +119,44 @@ const registerNode = (
 
   const label = extractLabel(raw) ?? fallbackLabel
   const properties = extractProperties(raw)
+  
+  // Extract display_name from properties or raw object
+  let displayName: string | undefined
+  if (properties && 'display_name' in properties && typeof properties.display_name === 'string') {
+    displayName = properties.display_name
+  } else if (raw && typeof raw === 'object' && 'display_name' in raw && typeof (raw as Record<string, unknown>).display_name === 'string') {
+    displayName = (raw as Record<string, unknown>).display_name as string
+  } else if (properties) {
+    // Try to construct a name from common name properties
+    const nameParts: string[] = []
+    
+    // Check for firstName/lastName
+    if (properties.firstName && typeof properties.firstName === 'string') {
+      nameParts.push(properties.firstName)
+    }
+    if (properties.lastName && typeof properties.lastName === 'string') {
+      nameParts.push(properties.lastName)
+    }
+    
+    // Check for full name
+    if (properties.name && typeof properties.name === 'string') {
+      nameParts.push(properties.name)
+    }
+    
+    // Check for description
+    if (properties.description && typeof properties.description === 'string') {
+      nameParts.push(properties.description)
+    }
+    
+    if (nameParts.length > 0) {
+      displayName = nameParts.join(' ').trim()
+    }
+  }
 
   const node: NormalisedGraphNode = {
     id,
     ...(label ? { label } : {}),
+    ...(displayName ? { display_name: displayName } : {}),
     ...(properties && Object.keys(properties).length > 0 ? { properties } : {}),
   }
 
