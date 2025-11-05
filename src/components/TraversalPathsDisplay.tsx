@@ -58,13 +58,7 @@ export const TraversalPathsDisplay = ({ paths, nodesUsed }: TraversalPathsDispla
 
   return (
     <div className="traversal-paths-display govuk-!-margin-top-4">
-      <h3 className="govuk-heading-s govuk-!-margin-bottom-2">Graph Dependencies Used</h3>
-      
-      {nodesUsed && nodesUsed.length > 0 && (
-        <p className="govuk-body-s govuk-!-margin-bottom-2">
-          <strong>{nodesUsed.length}</strong> nodes explored
-        </p>
-      )}
+      <h3 className="govuk-heading-s govuk-!-margin-bottom-2">Traversal Paths</h3>
 
       <div className="traversal-paths-display__paths">
         {paths.map((path, index) => {
