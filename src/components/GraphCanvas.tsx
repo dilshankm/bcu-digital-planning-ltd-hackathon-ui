@@ -567,7 +567,22 @@ export const GraphCanvas = memo(({ data, caption, height = 700, onNodeSelect, sh
         onNodeClick={(node: NodeObject | null) => {
           const clickedId = node ? (node.id?.toString() ?? null) : null
           // Toggle selection if clicking the same node
-          setSelectedNode((prev) => prev === clickedId ? null : clickedId)
+          const newSelectedId = selectedNode === clickedId ? null : clickedId
+          setSelectedNode(newSelectedId)
+          
+          // Call onNodeSelect callback immediately with the full node object
+          if (onNodeSelect && newSelectedId) {
+            const fullNode = filteredGraphData.nodes.find(
+              (n) => String(n.id ?? '') === newSelectedId
+            ) as ForceGraphNode | undefined
+            if (fullNode) {
+              // Find the original node from data.nodes to get all properties
+              const originalNode = data.nodes.find((n) => n.id === newSelectedId)
+              onNodeSelect(originalNode || fullNode)
+            }
+          } else if (onNodeSelect) {
+            onNodeSelect(null)
+          }
         }}
         onNodeDoubleClick={(node: NodeObject | null) => {
           if (node && graphRef.current) {
