@@ -2,19 +2,28 @@ import { config } from '@/config'
 import { buildUnexpectedResponseError, parseResponseBody } from '@/utils/http'
 
 export interface CsvImportOptions {
-  targetLabel?: string
+  targetLabel?: string // Legacy alias
+  nodeType?: string // Backend parameter name
   relationshipType?: string
+  properties?: string // Comma-separated list of property names
 }
 
 export const importCsv = async (file: File, options: CsvImportOptions = {}) => {
   const formData = new FormData()
   formData.append('file', file)
 
-  if (options.targetLabel) {
-    formData.append('target_label', options.targetLabel)
+  // Use nodeType if provided, otherwise fall back to targetLabel
+  const nodeType = options.nodeType || options.targetLabel
+  if (nodeType) {
+    formData.append('node_type', nodeType)
   }
+  
   if (options.relationshipType) {
     formData.append('relationship_type', options.relationshipType)
+  }
+  
+  if (options.properties) {
+    formData.append('properties', options.properties)
   }
 
   const endpoint = config.buildApiPath('/import/csv')

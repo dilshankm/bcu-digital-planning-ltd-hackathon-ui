@@ -20,7 +20,7 @@ export const PageLayout = ({ title, description, children }: PageLayoutProps) =>
           </a>
         </div>
         <div className="govuk-header__content">
-          <span className="govuk-header__service-name">Healthcare GraphRAG</span>
+          <span className="govuk-header__service-name">Healthcare Assistant</span>
         </div>
       </div>
     </header>
@@ -50,7 +50,7 @@ export const PageLayout = ({ title, description, children }: PageLayoutProps) =>
           <div className="govuk-footer__meta-item govuk-footer__meta-item--grow">
             <h2 className="govuk-visually-hidden">Support links</h2>
             <span className="govuk-footer__licence-description">
-              GraphRAG Healthcare Challenge using synthetic Synthea patient data with Neo4j graph database and LLM reasoning.
+              Healthcare Assistant powered by intelligent graph technology. Built for BCU Hackathon using synthetic patient data.
             </span>
           </div>
           <div className="govuk-footer__meta-item">

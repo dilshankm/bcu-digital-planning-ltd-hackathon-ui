@@ -27,25 +27,52 @@ const buildQueryString = (params: Record<string, unknown>) =>
 
 export const fetchNodes = async (params: {
   label?: string
+  node_type?: string // Backend parameter name
   limit?: number
   skip?: number
+  search?: string // Search parameter for firstName, lastName, description, id
 } = {}) => {
-  const query = buildQueryString(params)
+  // Map 'label' to 'node_type' for backend compatibility
+  const backendParams: Record<string, unknown> = {
+    ...params,
+  }
+  if (backendParams.label && !backendParams.node_type) {
+    backendParams.node_type = backendParams.label
+    delete backendParams.label
+  }
+  
+  const query = buildQueryString(backendParams)
   const endpoint = config.buildApiPath(query ? `/explore/nodes?${query}` : '/explore/nodes')
 
   return handleResponse(await fetch(endpoint))
 }
 
-export const fetchNodeDetail = async (nodeId: string) => {
-  const endpoint = config.buildApiPath(`/explore/node/${encodeURIComponent(nodeId)}`)
+export const fetchStats = async () => {
+  const endpoint = config.buildApiPath('/explore/stats')
+  return handleResponse(await fetch(endpoint))
+}
+
+export const fetchNodeDetail = async (nodeId: string, depth: number = 1) => {
+  const endpoint = config.buildApiPath(`/explore/node/${encodeURIComponent(nodeId)}?depth=${depth}`)
   return handleResponse(await fetch(endpoint))
 }
 
 export const fetchRelationships = async (params: {
   type?: string
+  rel_type?: string // Backend parameter name
   limit?: number
+  skip?: number // Pagination support
 } = {}) => {
-  const query = buildQueryString(params)
+  // Map 'type' to 'rel_type' for backend compatibility
+  const backendParams: Record<string, unknown> = {
+    ...params,
+  }
+  if (backendParams.type && !backendParams.rel_type) {
+    backendParams.rel_type = backendParams.type
+    delete backendParams.type
+  }
+  
+  const query = buildQueryString(backendParams)
   const endpoint = config.buildApiPath(
     query ? `/explore/relationships?${query}` : '/explore/relationships',
   )

@@ -39,3 +39,4 @@ export const CypherQueryDisplay = ({ query }: CypherQueryDisplayProps) => {
 
 export default CypherQueryDisplay
 
+

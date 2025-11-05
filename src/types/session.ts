@@ -13,3 +13,4 @@ export interface ConversationSession {
   updatedAt?: string
   messages: ChatMessage[]
 }
+

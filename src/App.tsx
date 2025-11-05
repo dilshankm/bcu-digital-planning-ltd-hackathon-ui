@@ -57,16 +57,15 @@ const App = () => {
   const description = useMemo(
     () => (
       <>
-        Ask questions about synthetic healthcare patient data using GraphRAG technology.
-        This intelligent system combines graph databases with LLM reasoning to answer complex
-        healthcare questions about patients, conditions, procedures, and clinical observations.
+        Ask questions about healthcare patient data. This intelligent assistant helps you explore
+        information about patients, conditions, procedures, and clinical observations.
       </>
     ),
     [],
   )
 
   return (
-    <PageLayout title="Healthcare GraphRAG Assistant" description={description}>
+    <PageLayout title="Healthcare Assistant" description={description}>
       <nav className="app-navigation" aria-label="Primary">
         <ul className="app-navigation__list">
           <li className="app-navigation__item">

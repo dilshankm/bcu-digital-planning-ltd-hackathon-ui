@@ -37,3 +37,4 @@ export const RefinementTimeline = ({ steps }: RefinementTimelineProps) => {
 }
 
 export default RefinementTimeline
+

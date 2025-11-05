@@ -16,6 +16,10 @@ declare module 'react-force-graph-2d' {
 
   export interface ForceGraphMethods {
     zoomToFit: (ms?: number, padding?: number) => void
+    zoom: (zoomLevel?: number) => number
+    centerAt: (x?: number, y?: number, ms?: number) => void
+    pauseAnimation: () => void
+    resumeAnimation: () => void
   }
 
   export interface ForceGraphProps<NodeType = NodeObject, LinkType = LinkObject> {
@@ -29,11 +33,17 @@ declare module 'react-force-graph-2d' {
     linkDirectionalArrowRelPos?: number
     linkCurvature?: number
     linkColor?: (link: LinkType) => string
+    linkOpacity?: (link: LinkType) => number
+    linkWidth?: (link: LinkType) => number
     linkLabel?: (link: LinkType) => string
     nodeLabel?: (node: NodeType) => string
     nodeCanvasObject?: (node: NodeType, ctx: CanvasRenderingContext2D, globalScale: number) => void
     onNodeHover?: (node: NodeType | null) => void
     onNodeClick?: (node: NodeType | null) => void
+    onNodeDoubleClick?: (node: NodeType | null) => void
+    onNodeDrag?: (node: NodeType) => void
+    onNodeDragEnd?: () => void
+    onBackgroundClick?: () => void
     cooldownTicks?: number
     onEngineStop?: () => void
   }

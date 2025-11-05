@@ -8,6 +8,7 @@ export const CsvImportForm = () => {
   const [file, setFile] = useState<File | null>(null)
   const [targetLabel, setTargetLabel] = useState('')
   const [relationshipType, setRelationshipType] = useState('')
+  const [properties, setProperties] = useState('')
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
   const [message, setMessage] = useState<string>('')
   const [result, setResult] = useState<unknown>(null)
@@ -26,8 +27,9 @@ export const CsvImportForm = () => {
 
     try {
       const response = await importCsv(file, {
-        targetLabel: targetLabel || undefined,
+        nodeType: targetLabel || undefined,
         relationshipType: relationshipType || undefined,
+        properties: properties || undefined,
       })
       setStatus('success')
       setMessage('CSV imported successfully. Review the server response below.')
@@ -67,7 +69,7 @@ export const CsvImportForm = () => {
         />
 
         <label className="govuk-label govuk-!-margin-top-3" htmlFor="target-label">
-          Target node label (optional)
+          Node type (optional)
         </label>
         <input
           className="govuk-input govuk-!-width-one-half"
@@ -75,7 +77,7 @@ export const CsvImportForm = () => {
           name="target-label"
           value={targetLabel}
           onChange={(event) => setTargetLabel(event.target.value)}
-          placeholder="ResearchStudy"
+          placeholder="Medication"
         />
 
         <label className="govuk-label govuk-!-margin-top-3" htmlFor="relationship-type">
@@ -88,6 +90,18 @@ export const CsvImportForm = () => {
           value={relationshipType}
           onChange={(event) => setRelationshipType(event.target.value)}
           placeholder="ASSOCIATED_WITH"
+        />
+
+        <label className="govuk-label govuk-!-margin-top-3" htmlFor="properties">
+          Properties (optional, comma-separated)
+        </label>
+        <input
+          className="govuk-input govuk-!-width-one-half"
+          id="properties"
+          name="properties"
+          value={properties}
+          onChange={(event) => setProperties(event.target.value)}
+          placeholder="id,name,dosage"
         />
 
         <button className="govuk-button govuk-!-margin-top-3" type="submit" disabled={status === 'loading'}>
