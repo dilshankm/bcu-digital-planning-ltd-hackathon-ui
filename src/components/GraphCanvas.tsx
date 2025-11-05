@@ -56,11 +56,8 @@ const getNodeColor = (node: ForceGraphNode): string => {
 const getNodeDisplayName = (node: ForceGraphNode): string => {
   // First check for display_name (API returns this at top level)
   if (node.display_name && typeof node.display_name === 'string' && node.display_name.trim() !== '') {
-    console.log('getNodeDisplayName - Using display_name:', node.display_name, 'for node:', node.id)
     return node.display_name
   }
-  
-  console.log('getNodeDisplayName - No display_name found for node:', node.id, 'Checking properties...')
   
   // Try to construct name from properties
   if (node.properties && typeof node.properties === 'object') {
@@ -86,20 +83,16 @@ const getNodeDisplayName = (node: ForceGraphNode): string => {
     }
     
     if (nameParts.length > 0) {
-      const constructed = nameParts.join(' ').trim()
-      console.log('getNodeDisplayName - Constructed name:', constructed, 'for node:', node.id)
-      return constructed
+      return nameParts.join(' ').trim()
     }
   }
   
   // Fall back to label (node type) but NEVER id
   if (node.label && typeof node.label === 'string' && node.label.trim() !== '') {
-    console.log('getNodeDisplayName - Using label:', node.label, 'for node:', node.id)
     return node.label
   }
   
   // Last resort: use a generic name instead of ID
-  console.warn('getNodeDisplayName - No name found, using "Node" for node:', node.id, 'Full node:', node)
   return 'Node'
 }
 

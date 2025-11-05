@@ -120,18 +120,12 @@ const registerNode = (
   const label = extractLabel(raw) ?? fallbackLabel
   const properties = extractProperties(raw)
   
-  console.log('registerNode - Raw node:', JSON.stringify(raw, null, 2))
-  console.log('registerNode - Extracted properties:', properties)
-  console.log('registerNode - Extracted label:', label)
-  
   // Extract display_name from raw object first (API returns it at top level), then properties
   let displayName: string | undefined
   if (raw && typeof raw === 'object' && 'display_name' in raw && typeof (raw as Record<string, unknown>).display_name === 'string') {
     displayName = (raw as Record<string, unknown>).display_name as string
-    console.log('registerNode - Found display_name in raw object (top level):', displayName)
   } else if (properties && 'display_name' in properties && typeof properties.display_name === 'string') {
     displayName = properties.display_name
-    console.log('registerNode - Found display_name in properties:', displayName)
   } else if (properties) {
     // Try to construct a name from common name properties
     const nameParts: string[] = []
@@ -156,11 +150,8 @@ const registerNode = (
     
     if (nameParts.length > 0) {
       displayName = nameParts.join(' ').trim()
-      console.log('registerNode - Constructed display_name from properties:', displayName)
     }
   }
-  
-  console.log('registerNode - Final display_name:', displayName)
 
   const node: NormalisedGraphNode = {
     id,
@@ -180,9 +171,6 @@ const registerLink = (context: RegisterContext, raw: unknown) => {
 
   const rawRecord = raw as Record<string, unknown>
   
-  console.log('registerLink - Raw relationship:', JSON.stringify(rawRecord, null, 2))
-  console.log('registerLink - Raw keys:', Object.keys(rawRecord))
-  
   let sourceCandidate =
     rawRecord.source ??
     rawRecord.start ??
@@ -197,9 +185,6 @@ const registerLink = (context: RegisterContext, raw: unknown) => {
     rawRecord.to ??
     rawRecord.in
 
-  console.log('registerLink - sourceCandidate:', sourceCandidate)
-  console.log('registerLink - targetCandidate:', targetCandidate)
-
   // If source/target are primitive values (numbers/strings), convert them to objects
   if (sourceCandidate !== undefined && (typeof sourceCandidate === 'number' || typeof sourceCandidate === 'string')) {
     sourceCandidate = { id: sourceCandidate }
@@ -210,7 +195,6 @@ const registerLink = (context: RegisterContext, raw: unknown) => {
   }
 
   if (!sourceCandidate || !targetCandidate) {
-    console.log('registerLink - Missing source or target, skipping')
     return
   }
 
@@ -218,35 +202,17 @@ const registerLink = (context: RegisterContext, raw: unknown) => {
   const target = registerNode(context, targetCandidate)
 
   const label = extractLabel(raw)
-  console.log('registerLink - Extracted label:', label)
-  console.log('registerLink - Label extraction check:', {
-    hasLabel: 'label' in rawRecord,
-    labelValue: rawRecord.label,
-    hasType: 'type' in rawRecord,
-    typeValue: rawRecord.type,
-    hasLabels: 'labels' in rawRecord,
-    labelsValue: rawRecord.labels
-  })
   
   // Create a unique key to prevent duplicates
   const linkKey = `${source.id}|${label || 'LINK'}|${target.id}`
   
   // Skip if this link already exists
   if (context.linkKeys.has(linkKey)) {
-    console.log('registerLink - Duplicate link, skipping:', linkKey)
     return
   }
 
   const id = extractId(raw) ?? `link-${context.links.length + 1}`
   const properties = extractProperties(raw)
-
-  console.log('registerLink - Creating link:', {
-    id,
-    label,
-    source: source.id,
-    target: target.id,
-    properties
-  })
 
   context.linkKeys.add(linkKey)
   context.links.push({
