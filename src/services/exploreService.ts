@@ -30,7 +30,6 @@ export const fetchNodes = async (params: {
   node_type?: string // Backend parameter name
   limit?: number
   skip?: number
-  search?: string // Search parameter for firstName, lastName, description, id
 } = {}) => {
   // Map 'label' to 'node_type' for backend compatibility
   const backendParams: Record<string, unknown> = {

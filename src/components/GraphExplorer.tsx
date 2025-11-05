@@ -170,7 +170,7 @@ export const GraphExplorer = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Use raw graph data (no client-side filtering since backend handles search)
+  // Use raw graph data (no client-side filtering)
   const nodeGraph = nodeGraphRaw
   const relationshipGraph = relationshipGraphRaw
 
