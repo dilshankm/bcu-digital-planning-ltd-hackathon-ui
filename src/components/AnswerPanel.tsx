@@ -1,6 +1,5 @@
 import type { AskQuestionResponse } from '@/types/ask'
 import CypherQueryDisplay from './CypherQueryDisplay'
-import TraversalPathsDisplay from './TraversalPathsDisplay'
 import ExplainabilityPanel from './ExplainabilityPanel'
 import RefinementTimeline from './RefinementTimeline'
 
@@ -42,11 +41,6 @@ export const AnswerPanel = ({ response }: AnswerPanelProps) => {
 
       {/* Cypher Query Display */}
       {response.cypher_query && <CypherQueryDisplay query={response.cypher_query} />}
-
-      {/* Traversal Paths */}
-      {response.traversal_paths && response.traversal_paths.length > 0 && (
-        <TraversalPathsDisplay paths={response.traversal_paths} />
-      )}
 
       {/* Explainability Panel */}
       <ExplainabilityPanel
