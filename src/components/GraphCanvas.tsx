@@ -254,16 +254,18 @@ export const GraphCanvas = memo(({ data, caption, height = 700, onNodeSelect, sh
 
   // Handle node selection callback
   useEffect(() => {
-    if (onNodeSelect && selectedNode) {
-      const node = filteredGraphData.nodes.find((n) => n.id === selectedNode) as ForceGraphNode | undefined
-      if (node) {
-        const normalizedNode = data.nodes.find((n) => n.id === selectedNode)
-        onNodeSelect(normalizedNode || null)
+    if (!onNodeSelect) return
+    
+    if (selectedNode) {
+      // Find the node from the original data.nodes array to get all properties
+      const normalizedNode = data.nodes.find((n) => String(n.id) === selectedNode)
+      if (normalizedNode) {
+        onNodeSelect(normalizedNode)
       }
-    } else if (onNodeSelect && !selectedNode) {
+    } else {
       onNodeSelect(null)
     }
-  }, [selectedNode, filteredGraphData.nodes, data.nodes, onNodeSelect])
+  }, [selectedNode, data.nodes, onNodeSelect])
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -567,22 +569,7 @@ export const GraphCanvas = memo(({ data, caption, height = 700, onNodeSelect, sh
         onNodeClick={(node: NodeObject | null) => {
           const clickedId = node ? (node.id?.toString() ?? null) : null
           // Toggle selection if clicking the same node
-          const newSelectedId = selectedNode === clickedId ? null : clickedId
-          setSelectedNode(newSelectedId)
-          
-          // Call onNodeSelect callback immediately with the full node object
-          if (onNodeSelect && newSelectedId) {
-            const fullNode = filteredGraphData.nodes.find(
-              (n) => String(n.id ?? '') === newSelectedId
-            ) as ForceGraphNode | undefined
-            if (fullNode) {
-              // Find the original node from data.nodes to get all properties
-              const originalNode = data.nodes.find((n) => n.id === newSelectedId)
-              onNodeSelect(originalNode || fullNode)
-            }
-          } else if (onNodeSelect) {
-            onNodeSelect(null)
-          }
+          setSelectedNode((prev) => prev === clickedId ? null : clickedId)
         }}
         onNodeDoubleClick={(node: NodeObject | null) => {
           if (node && graphRef.current) {
