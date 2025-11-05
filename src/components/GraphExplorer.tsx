@@ -115,13 +115,32 @@ export const GraphExplorer = () => {
 
   const nodeGraphRaw = useMemo(() => normaliseGraphData(nodeResults), [nodeResults])
   const relationshipGraphRaw = useMemo(() => {
+    console.log('=== NORMALIZING RELATIONSHIPS ===')
+    console.log('Raw relationshipResults:', relationshipResults)
     const normalized = normaliseGraphData(relationshipResults)
-    console.log('Normalized relationship graph:', normalized)
-    console.log('Nodes:', normalized.nodes.length, 'Links:', normalized.links.length)
+    console.log('Normalized graph:', normalized)
+    console.log('Normalized nodes count:', normalized.nodes.length)
+    console.log('Normalized links count:', normalized.links.length)
+    
     if (normalized.links.length > 0) {
-      console.log('Sample links:', normalized.links.slice(0, 3))
-      console.log('Link labels:', normalized.links.map(l => ({ id: l.id, label: l.label, source: l.source, target: l.target })).slice(0, 5))
+      console.log('=== FIRST 5 NORMALIZED LINKS ===')
+      normalized.links.slice(0, 5).forEach((link, index) => {
+        console.log(`Link ${index + 1}:`, {
+          id: link.id,
+          label: link.label,
+          source: link.source,
+          target: link.target,
+          properties: link.properties
+        })
+      })
+      
+      console.log('=== LINK LABELS SUMMARY ===')
+      const labels = normalized.links.map(l => l.label).filter(Boolean)
+      console.log('Unique labels:', [...new Set(labels)])
+      console.log('Links without labels:', normalized.links.filter(l => !l.label).length)
+      console.log('Links with labels:', normalized.links.filter(l => l.label).length)
     }
+    
     return normalized
   }, [relationshipResults])
 
@@ -188,11 +207,33 @@ export const GraphExplorer = () => {
         limit: relationshipPageSize,
         skip,
       })
-      console.log('Relationship API response (raw):', results)
-      if (results && typeof results === 'object' && 'relationships' in results && Array.isArray((results as Record<string, unknown>).relationships)) {
-        const rels = (results as Record<string, unknown>).relationships as unknown[]
-        console.log('Sample relationship:', rels[0])
+      console.log('=== RELATIONSHIP API RESPONSE ===')
+      console.log('Full response:', JSON.stringify(results, null, 2))
+      console.log('Response type:', typeof results)
+      console.log('Is object:', results && typeof results === 'object')
+      
+      if (results && typeof results === 'object') {
+        const resultObj = results as Record<string, unknown>
+        console.log('Response keys:', Object.keys(resultObj))
+        
+        if ('relationships' in resultObj && Array.isArray(resultObj.relationships)) {
+          const rels = resultObj.relationships as unknown[]
+          console.log('Number of relationships:', rels.length)
+          console.log('First 3 relationships:', rels.slice(0, 3))
+          if (rels.length > 0) {
+            console.log('Sample relationship structure:', JSON.stringify(rels[0], null, 2))
+            console.log('Sample relationship keys:', rels[0] && typeof rels[0] === 'object' ? Object.keys(rels[0] as Record<string, unknown>) : 'N/A')
+          }
+        } else if ('links' in resultObj && Array.isArray(resultObj.links)) {
+          const links = resultObj.links as unknown[]
+          console.log('Number of links:', links.length)
+          console.log('First 3 links:', links.slice(0, 3))
+        } else {
+          console.log('No relationships or links array found')
+          console.log('Response structure:', Object.keys(resultObj))
+        }
       }
+      
       setRelationshipResults(results)
     })
   }, [relationshipType, relationshipPage, relationshipPageSize, runSafely])
