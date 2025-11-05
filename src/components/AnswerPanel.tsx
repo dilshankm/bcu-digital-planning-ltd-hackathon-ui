@@ -35,7 +35,9 @@ export const AnswerPanel = ({ response }: AnswerPanelProps) => {
   return (
     <section className="ask-answer" aria-live="polite">
       <h2 className="govuk-heading-m">Answer</h2>
-      <div className="ask-answer__content">{response.answer}</div>
+      <div className="ask-answer__content">
+        <p className="govuk-body">{response.answer}</p>
+      </div>
       {renderSources(response.sources)}
 
       {/* Cypher Query Display */}
