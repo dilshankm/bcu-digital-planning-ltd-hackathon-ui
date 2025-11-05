@@ -30,7 +30,7 @@ const extractProperties = (raw: unknown): Record<string, unknown> | undefined =>
   }
 
   const entries = Object.entries(raw as Record<string, unknown>).filter(([key]) =>
-    !['id', 'ID', 'uuid', 'uid', 'identifier', 'identity', 'labels', 'type', 'label'].includes(key),
+    !['id', 'ID', 'uuid', 'uid', 'identifier', 'identity', 'labels', 'type', 'label', 'display_name'].includes(key),
   )
 
   return entries.length > 0 ? Object.fromEntries(entries) : undefined
@@ -120,12 +120,18 @@ const registerNode = (
   const label = extractLabel(raw) ?? fallbackLabel
   const properties = extractProperties(raw)
   
-  // Extract display_name from properties or raw object
+  console.log('registerNode - Raw node:', JSON.stringify(raw, null, 2))
+  console.log('registerNode - Extracted properties:', properties)
+  console.log('registerNode - Extracted label:', label)
+  
+  // Extract display_name from raw object first (API returns it at top level), then properties
   let displayName: string | undefined
-  if (properties && 'display_name' in properties && typeof properties.display_name === 'string') {
-    displayName = properties.display_name
-  } else if (raw && typeof raw === 'object' && 'display_name' in raw && typeof (raw as Record<string, unknown>).display_name === 'string') {
+  if (raw && typeof raw === 'object' && 'display_name' in raw && typeof (raw as Record<string, unknown>).display_name === 'string') {
     displayName = (raw as Record<string, unknown>).display_name as string
+    console.log('registerNode - Found display_name in raw object (top level):', displayName)
+  } else if (properties && 'display_name' in properties && typeof properties.display_name === 'string') {
+    displayName = properties.display_name
+    console.log('registerNode - Found display_name in properties:', displayName)
   } else if (properties) {
     // Try to construct a name from common name properties
     const nameParts: string[] = []
@@ -139,19 +145,22 @@ const registerNode = (
     }
     
     // Check for full name
-    if (properties.name && typeof properties.name === 'string') {
+    if (properties.name && typeof properties.name === 'string' && nameParts.length === 0) {
       nameParts.push(properties.name)
     }
     
     // Check for description
-    if (properties.description && typeof properties.description === 'string') {
+    if (properties.description && typeof properties.description === 'string' && nameParts.length === 0) {
       nameParts.push(properties.description)
     }
     
     if (nameParts.length > 0) {
       displayName = nameParts.join(' ').trim()
+      console.log('registerNode - Constructed display_name from properties:', displayName)
     }
   }
+  
+  console.log('registerNode - Final display_name:', displayName)
 
   const node: NormalisedGraphNode = {
     id,
