@@ -256,13 +256,30 @@ export const GraphCanvas = memo(({ data, caption, height = 700, onNodeSelect, sh
   useEffect(() => {
     if (!onNodeSelect) return
     
+    console.log('useEffect triggered - selectedNode:', selectedNode, 'data.nodes count:', data.nodes.length)
+    
     if (selectedNode) {
       // Find the node from the original data.nodes array to get all properties
-      const normalizedNode = data.nodes.find((n) => String(n.id) === selectedNode)
+      // Try both string and number comparison since IDs can be either
+      const normalizedNode = data.nodes.find((n) => {
+        const nodeId = String(n.id ?? '')
+        const selectedId = String(selectedNode ?? '')
+        const matches = nodeId === selectedId
+        if (matches) {
+          console.log('Found matching node:', normalizedNode)
+        }
+        return matches
+      })
+      
       if (normalizedNode) {
+        console.log('Calling onNodeSelect with node:', normalizedNode)
         onNodeSelect(normalizedNode)
+      } else {
+        // Fallback: try finding by converting both to strings
+        console.warn('Node not found in data.nodes:', selectedNode, 'Available nodes:', data.nodes.map(n => n.id))
       }
     } else {
+      console.log('Calling onNodeSelect with null')
       onNodeSelect(null)
     }
   }, [selectedNode, data.nodes, onNodeSelect])
@@ -567,9 +584,23 @@ export const GraphCanvas = memo(({ data, caption, height = 700, onNodeSelect, sh
           setHoveredNode(node ? (node.id?.toString() ?? null) : null)
         }}
         onNodeClick={(node: NodeObject | null) => {
-          const clickedId = node ? (node.id?.toString() ?? null) : null
+          console.log('Node clicked:', node)
+          if (!node) {
+            setSelectedNode(null)
+            return
+          }
+          
+          const clickedId = node.id ? String(node.id) : null
+          console.log('Clicked node ID:', clickedId)
+          if (!clickedId) return
+          
           // Toggle selection if clicking the same node
-          setSelectedNode((prev) => prev === clickedId ? null : clickedId)
+          setSelectedNode((prev) => {
+            const prevId = prev ? String(prev) : null
+            const newId = prevId === clickedId ? null : clickedId
+            console.log('Setting selectedNode to:', newId)
+            return newId
+          })
         }}
         onNodeDoubleClick={(node: NodeObject | null) => {
           if (node && graphRef.current) {
