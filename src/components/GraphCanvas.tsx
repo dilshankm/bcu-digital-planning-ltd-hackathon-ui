@@ -52,10 +52,10 @@ const getNodeColor = (node: ForceGraphNode): string => {
   return defaultNodeColour
 }
 
-// Get display name for a node, preferring display_name, then constructing from properties, then label, then id
+// Get display name for a node, preferring display_name, then constructing from properties, then label, NEVER id
 const getNodeDisplayName = (node: ForceGraphNode): string => {
   // First check for display_name
-  if (node.display_name) {
+  if (node.display_name && typeof node.display_name === 'string' && node.display_name.trim() !== '') {
     return node.display_name
   }
   
@@ -87,8 +87,13 @@ const getNodeDisplayName = (node: ForceGraphNode): string => {
     }
   }
   
-  // Fall back to label or id
-  return node.label ?? String(node.id ?? 'Unknown')
+  // Fall back to label (node type) but NEVER id
+  if (node.label && typeof node.label === 'string' && node.label.trim() !== '') {
+    return node.label
+  }
+  
+  // Last resort: use a generic name instead of ID
+  return 'Node'
 }
 
 export const GraphCanvas = memo(({ data, caption, height = 700, onNodeSelect, showControls = false }: GraphCanvasProps) => {
@@ -492,15 +497,12 @@ export const GraphCanvas = memo(({ data, caption, height = 700, onNodeSelect, sh
             parts.push(`Type: ${typed.label}`)
           }
           
-          // Node ID
-          parts.push(`ID: ${typed.id}`)
-          
-          // All properties
+          // All properties (but NOT ID)
           if (typed.properties && typeof typed.properties === 'object') {
             const props = Object.entries(typed.properties)
               .filter(([key]) => {
-                // Exclude common fields already shown or redundant
-                return !['display_name', 'firstName', 'lastName', 'name'].includes(key)
+                // Exclude common fields already shown or redundant, and exclude id
+                return !['display_name', 'firstName', 'lastName', 'name', 'id', 'ID'].includes(key)
               })
               .map(([key, value]) => {
                 const valStr = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)
